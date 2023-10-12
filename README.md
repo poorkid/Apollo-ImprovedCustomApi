@@ -1,9 +1,6 @@
-## Use your own reddit and imgur API credentials in Apollo
-
+## Apollo for Reddit with in-app API key configuration
 
 ### Creating Reddit API Credentials
-
-sign out of all accounts in Apollo before installing
 
 1. Install the tweak and launch Apollo.
 2. When prompted, sign into reddit.com.

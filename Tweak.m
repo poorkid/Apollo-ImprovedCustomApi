@@ -13,110 +13,108 @@ static NSDictionary *stripGroupAccessAttr(CFDictionaryRef attributes) {
 
 static void *SecItemAdd_orig;
 static OSStatus SecItemAdd_replacement(CFDictionaryRef query, CFTypeRef *result) {
-	NSDictionary *strippedQuery = stripGroupAccessAttr(query);
-	return ((OSStatus (*)(CFDictionaryRef, CFTypeRef *))SecItemAdd_orig)((__bridge CFDictionaryRef)strippedQuery, result);
+    NSDictionary *strippedQuery = stripGroupAccessAttr(query);
+    return ((OSStatus (*)(CFDictionaryRef, CFTypeRef *))SecItemAdd_orig)((__bridge CFDictionaryRef)strippedQuery, result);
 }
 
 static void *SecItemCopyMatching_orig;
 static OSStatus SecItemCopyMatching_replacement(CFDictionaryRef query, CFTypeRef *result) {
     NSDictionary *strippedQuery = stripGroupAccessAttr(query);
-	return ((OSStatus (*)(CFDictionaryRef, CFTypeRef *))SecItemCopyMatching_orig)((__bridge CFDictionaryRef)strippedQuery, result);
+    return ((OSStatus (*)(CFDictionaryRef, CFTypeRef *))SecItemCopyMatching_orig)((__bridge CFDictionaryRef)strippedQuery, result);
 }
 
 static void *SecItemUpdate_orig;
 static OSStatus SecItemUpdate_replacement(CFDictionaryRef query, CFDictionaryRef attributesToUpdate) {
-	NSDictionary *strippedQuery = stripGroupAccessAttr(query);
-	return ((OSStatus (*)(CFDictionaryRef, CFDictionaryRef))SecItemUpdate_orig)((__bridge CFDictionaryRef)strippedQuery, attributesToUpdate);
+    NSDictionary *strippedQuery = stripGroupAccessAttr(query);
+    return ((OSStatus (*)(CFDictionaryRef, CFDictionaryRef))SecItemUpdate_orig)((__bridge CFDictionaryRef)strippedQuery, attributesToUpdate);
 }
 
 __attribute__ ((constructor)) static void init(void) {
 
-	rebind_symbols((struct rebinding[3]) {
-		{"SecItemAdd", SecItemAdd_replacement, (void *)&SecItemAdd_orig},
-		{"SecItemCopyMatching", SecItemCopyMatching_replacement, (void *)&SecItemCopyMatching_orig},
-		{"SecItemUpdate", SecItemUpdate_replacement, (void *)&SecItemUpdate_orig}
-	}, 3);
+    rebind_symbols((struct rebinding[3]) {
+        {"SecItemAdd", SecItemAdd_replacement, (void *)&SecItemAdd_orig},
+        {"SecItemCopyMatching", SecItemCopyMatching_replacement, (void *)&SecItemCopyMatching_orig},
+        {"SecItemUpdate", SecItemUpdate_replacement, (void *)&SecItemUpdate_orig}
+    }, 3);
 
-	if (![[NSUserDefaults standardUserDefaults] valueForKey:@"ApolloRedditAPIClientID"]) {
-		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    if (![[NSUserDefaults standardUserDefaults] valueForKey:@"RedditApiClientId"]) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            UIWindow *mainWindow = ((UIWindowScene *)UIApplication.sharedApplication.connectedScenes.anyObject).windows.firstObject;
+            UITabBarController *tabBarController = (UITabBarController *)mainWindow.rootViewController;
+            // Navigate to Settings tab
+            tabBarController.selectedViewController = [tabBarController.viewControllers lastObject];
+            UINavigationController *settingsNavController = (UINavigationController *) tabBarController.selectedViewController;
+            
+            // Navigate to General Settings
+            Class cls = NSClassFromString(@"Apollo.SettingsGeneralViewController");
+            UIViewController *settingsGeneralViewController = [[cls alloc] init];
+            [settingsNavController pushViewController:settingsGeneralViewController animated:YES];
+        });
+    }
 
-			UIWindow *mainWindow = ((UIWindowScene *)UIApplication.sharedApplication.connectedScenes.anyObject).windows.firstObject;
+    // Reddit API Credentials
+    Class _RDKOAuthCredential = objc_getClass("RDKOAuthCredential");
+    if (_RDKOAuthCredential) {
+        Method clientIdMethod = class_getInstanceMethod(_RDKOAuthCredential, sel_registerName("clientIdentifier"));
+        IMP replacementImp = imp_implementationWithBlock(^NSString *(id _self) {
+            return [[NSUserDefaults standardUserDefaults] valueForKey:@"RedditApiClientId"];
+        });
 
-			UIWindow *window = [[UIWindow alloc] initWithFrame:mainWindow.frame];
-			[window makeKeyAndVisible];
-			[mainWindow addSubview:window];
+        method_setImplementation(clientIdMethod, replacementImp);
+    }
 
-			UINavigationController *navController = [[UINavigationController alloc] initWithRootViewController:[[UIViewController alloc] init]];
-			[window addSubview:navController.view];
+    // Randomize User-Agent
+    Class _RDKClient = objc_getClass("RDKClient");
+    if (_RDKClient) {
 
-			RedditAPICredentialViewController *viewController = [[RedditAPICredentialViewController alloc] init];
-			[navController presentViewController:viewController animated:YES completion:nil];
-		});
-	}
+        Method userAgentMethod = class_getInstanceMethod(_RDKClient, sel_registerName("userAgent"));
+        IMP userAgentReplacementImp = imp_implementationWithBlock(^NSString *(id _self) {
+            static dispatch_once_t once;
+            static NSString *newUserAgent;
+            dispatch_once(&once, ^{
+                newUserAgent = [NSString stringWithFormat:@"iOS: com.%@.%@ v%d.%d.%d (by /u/%@)", RANDSTRING, RANDSTRING, RANDINT, RANDINT, RANDINT, RANDSTRING];
+            });
 
-	// Reddit API Credentials
-	Class _RDKOAuthCredential = objc_getClass("RDKOAuthCredential");
-	if (_RDKOAuthCredential) {
+            return newUserAgent;
+        });
 
-		Method clientIdMethod = class_getInstanceMethod(_RDKOAuthCredential, sel_registerName("clientIdentifier"));
-		IMP replacementImp = imp_implementationWithBlock(^NSString *(id _self) {
-			return [[NSUserDefaults standardUserDefaults] valueForKey:@"ApolloRedditAPIClientID"];
-		});
+        method_setImplementation(userAgentMethod, userAgentReplacementImp);
+    }
 
-		method_setImplementation(clientIdMethod, replacementImp);
-	}
+    // Imgur API credentials
+    Class ___NSCFLocalSessionTask = objc_getClass("__NSCFLocalSessionTask");
+    Method onqueueResumeMethod = class_getInstanceMethod(___NSCFLocalSessionTask, sel_registerName("_onqueue_resume"));
+    IMP originalOnqueueImp = method_getImplementation(onqueueResumeMethod);
+    IMP replacementOnqueueImp = imp_implementationWithBlock(^void (id _self) {
 
-	// Randomize User-Agent
-	Class _RDKClient = objc_getClass("RDKClient");
-	if (_RDKClient) {
+        // Grab the request url
+        NSURLRequest *request =  [_self valueForKey:@"_originalRequest"];
+        NSString *requestURL = request.URL.absoluteString;
 
-		Method userAgentMethod = class_getInstanceMethod(_RDKClient, sel_registerName("userAgent"));
-		IMP userAgentReplacementImp = imp_implementationWithBlock(^NSString *(id _self) {
-			static dispatch_once_t once;
-			static NSString *newUserAgent;
-			dispatch_once(&once, ^{
-				newUserAgent = [NSString stringWithFormat:@"iOS: com.%@.%@ v%d.%d.%d (by /u/%@)", RANDSTRING, RANDSTRING, RANDINT, RANDINT, RANDINT, RANDSTRING];
-			});
+        // Drop requests to analytics/apns services
+        if ([requestURL containsString:@"https://apollopushserver.xyz"] || [requestURL containsString:@"telemetrydeck.com"]) {
+            return;
+        }
 
-			return newUserAgent;
-		});
+        // Catch requests to Apollo's Imgur proxy and Rapidshare. The URLs will be replaced with the real Imgur API
+        if ([requestURL containsString:@"https://apollogur.download/api/"] || [requestURL containsString:@"https://imgur-apiv3.p.rapidapi.com"]) {
 
-		method_setImplementation(userAgentMethod, userAgentReplacementImp);
-	}
+            NSMutableURLRequest *mutableRequest = [request mutableCopy];
 
-	// Imgur API credentials
-	Class ___NSCFLocalSessionTask = objc_getClass("__NSCFLocalSessionTask");
-	Method onqueueResumeMethod = class_getInstanceMethod(___NSCFLocalSessionTask, sel_registerName("_onqueue_resume"));
-	IMP originalOnqueueImp = method_getImplementation(onqueueResumeMethod);
-	IMP replacementOnqueueImp = imp_implementationWithBlock(^void (id _self) {
+            // Replace proxy urls with the real imgur api
+            NSString *newURLString = [request.URL.absoluteString stringByReplacingOccurrencesOfString:@"https://apollogur.download/api/" withString:@"https://api.imgur.com/3/"];
+            newURLString = [request.URL.absoluteString stringByReplacingOccurrencesOfString:@"https://imgur-apiv3.p.rapidapi.com/" withString:@"https://api.imgur.com/"];
+            mutableRequest.URL = [NSURL URLWithString:newURLString];
 
-		// Grab the request url
-		NSURLRequest *request =  [_self valueForKey:@"_originalRequest"];
-		NSString *requestURL = request.URL.absoluteString;
+            NSString *imgurClientId = [[NSUserDefaults standardUserDefaults] valueForKey:@"ImgurApiClientId"];
+            // Insert the api credential and update the request on this session task
+            [mutableRequest setValue:[NSString stringWithFormat:@"Client-ID %@", imgurClientId] forHTTPHeaderField:@"Authorization"];
+            [_self setValue:mutableRequest forKey:@"_originalRequest"];
+            [_self setValue:mutableRequest forKey:@"_currentRequest"];
+        }
 
-		// Drop requests to analytics/apns services
-		if ([requestURL containsString:@"https://apollopushserver.xyz"] || [requestURL containsString:@"telemetrydeck.com"]) {
-			return;
-		}
+        ((void (*)(id, SEL))originalOnqueueImp)(_self, sel_registerName("_onqueue_resume"));
+    });
 
-		// Catch requests to Apollo's Imgur proxy and Rapidshare. The URLs will be replaced with the real Imgur API
-		if ([requestURL containsString:@"https://apollogur.download/api/"] || [requestURL containsString:@"https://imgur-apiv3.p.rapidapi.com"]) {
-
-			NSMutableURLRequest *mutableRequest = [request mutableCopy];
-
-			// Replace proxy urls with the real imgur api
-			NSString *newURLString = [request.URL.absoluteString stringByReplacingOccurrencesOfString:@"https://apollogur.download/api/" withString:@"https://api.imgur.com/3/"];
-			newURLString = [request.URL.absoluteString stringByReplacingOccurrencesOfString:@"https://imgur-apiv3.p.rapidapi.com/" withString:@"https://api.imgur.com/"];
-			mutableRequest.URL = [NSURL URLWithString:newURLString];
-
-			// Insert the api credential and update the request on this session task
-			[mutableRequest setValue:[NSString stringWithFormat:@"Client-ID %@", kImgurClientID] forHTTPHeaderField:@"Authorization"];
-			[_self setValue:mutableRequest forKey:@"_originalRequest"];
-			[_self setValue:mutableRequest forKey:@"_currentRequest"];
-		}
-
-		((void (*)(id, SEL))originalOnqueueImp)(_self, sel_registerName("_onqueue_resume"));
-	});
-
-	method_setImplementation(onqueueResumeMethod, replacementOnqueueImp);
+    method_setImplementation(onqueueResumeMethod, replacementOnqueueImp);
 }

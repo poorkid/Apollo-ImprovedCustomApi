@@ -1,15 +1,15 @@
 ARCHS = arm64
 
-TARGET := iphone:clang:latest:7.0
+TARGET := iphone:clang:latest:15.0
 INSTALL_TARGET_PROCESSES = Apollo
 THEOS_LEAN_AND_MEAN = 1
 
 include $(THEOS)/makefiles/common.mk
 
-TWEAK_NAME = ApolloCustomApiCredentials
+TWEAK_NAME = ApolloCustomApiCredentialsPlus
 
-ApolloCustomApiCredentials_FILES = Tweak.m RedditAPICredentialViewController.m fishhook.c
-ApolloCustomApiCredentials_FRAMEWORKS = UIKit WebKit
-ApolloCustomApiCredentials_CFLAGS = -fobjc-arc -Wno-unguarded-availability-new
+ApolloCustomApiCredentialsPlus_FILES = Tweak.m RedditAPICredentialViewController.m fishhook.c
+ApolloCustomApiCredentialsPlus_FRAMEWORKS = UIKit WebKit
+ApolloCustomApiCredentialsPlus_CFLAGS = -fobjc-arc -Wno-unguarded-availability-new
 
 include $(THEOS_MAKE_PATH)/tweak.mk
