@@ -8,8 +8,8 @@ include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = ApolloCustomApiCredentialsPlus
 
-ApolloCustomApiCredentialsPlus_FILES = Tweak.m RedditAPICredentialViewController.m fishhook.c
+ApolloCustomApiCredentialsPlus_FILES = Tweak.x CustomAPIViewController.m fishhook.c
 ApolloCustomApiCredentialsPlus_FRAMEWORKS = UIKit WebKit
-ApolloCustomApiCredentialsPlus_CFLAGS = -fobjc-arc -Wno-unguarded-availability-new
+ApolloCustomApiCredentialsPlus_CFLAGS = -fobjc-arc -Wno-unguarded-availability-new -Wno-arc-performSelector-leaks
 
 include $(THEOS_MAKE_PATH)/tweak.mk

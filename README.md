@@ -1,4 +1,5 @@
-## Apollo for Reddit with in-app API key configuration
+# Apollo-CustomApiCredentialsPlus
+Apollo for Reddit with in-app API key configuration
 
 ### Creating Reddit API Credentials
 

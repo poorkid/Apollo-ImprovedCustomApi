@@ -1,4 +1,5 @@
 .theos
-packages
 *.ipa
 *.zip
+Resources/
+packages/
