@@ -1,0 +1,46 @@
+name: Build and release
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build tweak
+    runs-on: macos-13
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: brew install ldid dpkg make
+
+      - name: Set PATH environment variable
+        run: echo "$(brew --prefix make)/libexec/gnubin" >> $GITHUB_PATH 
+
+      - name: Setup Theos
+        uses: actions/checkout@v4
+        with:
+          repository: theos/theos
+          ref: master
+          path: theos
+          submodules: recursive
+
+      - name: Build package
+        run: make package FINALPACKAGE=1
+
+        env:
+          THEOS: ${{ github.workspace }}/theos
+
+      # - name: Create Release
+      #   id: create_release
+      #   uses: softprops/action-gh-release@v0.1.15
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     tag_name: v
+      #     name: v${{ env.VERSION }}
+      #     files: main/packages/*.deb
