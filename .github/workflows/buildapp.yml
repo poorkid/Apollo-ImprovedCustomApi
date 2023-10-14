@@ -9,7 +9,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build tweak
+    name: Build and release tweak
     runs-on: macos-13
     permissions:
       contents: write
