@@ -154,7 +154,7 @@
     [stackView addArrangedSubview:githubButton];
 
     UILabel *creditsLabel = [[UILabel alloc] init];
-    creditsLabel.text = @"Inspired by";
+    creditsLabel.text = @"Credits";
     creditsLabel.font = [UIFont boldSystemFontOfSize:18];
     creditsLabel.textAlignment = NSTextAlignmentCenter;
     [stackView addArrangedSubview:creditsLabel];

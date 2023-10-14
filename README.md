@@ -1,23 +1,16 @@
 # Apollo-CustomApiCredentialsPlus
-Apollo for Reddit with in-app API key configuration
+Apollo for Reddit with in-app configurable API keys. This tweak includes several fixes to Imgur loading problems that other similar tweaks may have.
 
-### Creating Reddit API Credentials
+![](img/demo.gif)
 
-1. Install the tweak and launch Apollo.
-2. When prompted, sign into reddit.com.
-3. After signing in, you'll be redirected to your account's "developer apps" page.
-4. A new developer app needs to be created. The tweak will autopopulate all fields with the correct information.
-5. Complete the Captcha and click `create app`.
-6. Once the app has been created, you will land on the Apollo Home feed.
+## Build
+### Requirements
+- [Theos](https://github.com/theos/theos)
 
-![](img/credential-creation-flow.gif)
+1. `git clone`
+2. `make package`
 
-### Creating Imgur API Credentials
-
-1. Navigate to https://api.imgur.com/oauth2/addclient. Sign in (or create an account)
-2. Application name: `anything`
-3. Authorization type: `Anonymous usage without user authorization`
-4. Authorization callback URL: `apollo://imgur-oauth`
-5. Description: `anything`
-6. After creating the app, copy the generated `client_id` value into `kImgurClientID` (near the top of the `Tweak.m` file)
-![](img/imgur-add-client.png)
+## Credits
+- [Apollo-CustomApiCredentials](https://github.com/EthanArbuckle/Apollo-CustomApiCredentials) by [@EthanArbuckle](https://github.com/EthanArbuckle)
+- [ApolloAPI](https://github.com/ryannair05/ApolloAPI) by [@ryannair05](https://github.com/ryannair05)
+- [ApolloPatcher](https://github.com/ichitaso/ApolloPatcher) by [@ichitaso](https://github.com/ichitaso)
