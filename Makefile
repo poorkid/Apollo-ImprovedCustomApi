@@ -9,7 +9,7 @@ include $(THEOS)/makefiles/common.mk
 TWEAK_NAME = ApolloImprovedCustomApi
 
 ApolloImprovedCustomApi_FILES = Tweak.x CustomAPIViewController.m fishhook.c
-ApolloImprovedCustomApi_FRAMEWORKS = UIKit WebKit
-ApolloImprovedCustomApi_CFLAGS = -fobjc-arc -Wno-unguarded-availability-new -Wno-arc-performSelector-leaks
+ApolloImprovedCustomApi_FRAMEWORKS = UIKit
+ApolloImprovedCustomApi_CFLAGS = -fobjc-arc -Wno-unguarded-availability-new
 
 include $(THEOS_MAKE_PATH)/tweak.mk
