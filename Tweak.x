@@ -1,7 +1,6 @@
 #import <Foundation/Foundation.h>
 #import <objc/runtime.h>
 
-#import "CydiaSubstrate.h"
 #import "Tweak.h"
 #import "UserDefaultConstants.h"
 #import "fishhook.h"
