@@ -18,6 +18,12 @@ jobs:
       - name: Checkout main
         uses: actions/checkout@v4
 
+      - name: Parse control file version
+        id: parse_control
+        run: |
+          version=$(sed -n 's/^Version: //p' control)
+          echo "TWEAK_VERSION=$version" >> "$GITHUB_OUTPUT"
+
       - name: Install Dependencies
         run: brew install ldid dpkg make
 
@@ -38,12 +44,12 @@ jobs:
         env:
           THEOS: ${{ github.workspace }}/theos
 
-      # - name: Create Release
-      #   id: create_release
-      #   uses: softprops/action-gh-release@v0.1.15
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     tag_name: v
-      #     name: v${{ env.VERSION }}
-      #     files: main/packages/*.deb
+      - name: Create release
+        id: create_release
+        uses: softprops/action-gh-release@v0.1.15
+        env:
+          TWEAK_VERSION: ${{ steps.parse_control.outputs.TWEAK_VERSION }}
+        with:
+          tag_name: v${{ env.TWEAK_VERSION }}
+          name: v${{ env.TWEAK_VERSION }}
+          files: packages/*.deb
