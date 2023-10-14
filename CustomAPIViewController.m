@@ -174,10 +174,13 @@
 
 - (void)textFieldDidEndEditing:(UITextField *)textField {
     if (textField.tag == 0) {
+        // Trim textField.text whitespaces
+        textField.text = [textField.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
         sRedditClientId = textField.text;
         [[NSUserDefaults standardUserDefaults] setValue:sRedditClientId forKey:UDKeyRedditClientId];
     }
     else if (textField.tag == 1) {
+        textField.text = [textField.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
         sImgurClientId = textField.text;
         [[NSUserDefaults standardUserDefaults] setValue:sImgurClientId forKey:UDKeyImgurClientId];
     }
