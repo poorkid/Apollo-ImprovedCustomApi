@@ -5,6 +5,7 @@
 #import "UserDefaultConstants.h"
 #import "fishhook.h"
 
+// Sideload fixes
 static NSDictionary *stripGroupAccessAttr(CFDictionaryRef attributes) {
     NSMutableDictionary *newAttributes = [[NSMutableDictionary alloc] initWithDictionary:(__bridge id)attributes];
     [newAttributes removeObjectForKey:(__bridge id)kSecAttrAccessGroup];
@@ -29,6 +30,7 @@ static OSStatus SecItemUpdate_replacement(CFDictionaryRef query, CFDictionaryRef
     return ((OSStatus (*)(CFDictionaryRef, CFDictionaryRef))SecItemUpdate_orig)((__bridge CFDictionaryRef)strippedQuery, attributesToUpdate);
 }
 
+// Replace Reddit API client ID
 %hook RDKOAuthCredential
 
 - (NSString *)clientIdentifier {
@@ -37,33 +39,8 @@ static OSStatus SecItemUpdate_replacement(CFDictionaryRef query, CFDictionaryRef
 
 %end
 
-@interface __NSCFLocalSessionTask : NSObject <NSCopying, NSProgressReporting>
-@end
-
-%hook __NSCFLocalSessionTask
-
-- (void)_onqueue_resume {
-    // Grab the request url
-    NSURLRequest *request =  [self valueForKey:@"_originalRequest"];
-    NSString *requestURL = request.URL.absoluteString;
-
-    // Drop requests to analytics/apns services
-    if ([requestURL containsString:@"https://apollopushserver.xyz"] || [requestURL containsString:@"telemetrydeck.com"]) {
-        return;
-    }
-
-    if ([requestURL containsString:@"https://api.imgur.com/"]) {
-        NSMutableURLRequest *mutableRequest = [request mutableCopy];
-        // Insert the api credential and update the request on this session task
-        [mutableRequest setValue:[NSString stringWithFormat:@"Client-ID %@", sImgurClientId] forHTTPHeaderField:@"Authorization"];
-        [self setValue:mutableRequest forKey:@"_originalRequest"];
-        [self setValue:mutableRequest forKey:@"_currentRequest"];
-    }
-
-    %orig;
-}
-
-%end
+// Implementation derived from https://github.com/ichitaso/ApolloPatcher/blob/v0.0.5/Tweak.x
+// Credits to @ichitaso for the original implementation
 
 @interface NSURLSession (Private)
 - (BOOL)isJSONResponse:(NSURLResponse *)response;
@@ -84,6 +61,7 @@ static OSStatus SecItemUpdate_replacement(CFDictionaryRef query, CFDictionaryRef
     }
     return %orig();
 }
+
 // Imgur Delete
 - (NSURLSessionDataTask*)dataTaskWithRequest:(NSURLRequest*)request completionHandler:(void (^)(NSData*, NSURLResponse*, NSError*))completionHandler {
     NSString *urlString = [[request URL] absoluteString];
@@ -100,7 +78,7 @@ static OSStatus SecItemUpdate_replacement(CFDictionaryRef query, CFDictionaryRef
     return %orig();
 }
 
-// Fix Imgur loading issue
+// "Unproxy" Imgur requests
 static NSString *imageID;
 - (NSURLSessionDataTask *)dataTaskWithURL:(NSURL *)url completionHandler:(void (^)(NSData *, NSURLResponse *, NSError *))completionHandler {
     imageID = [url.lastPathComponent stringByDeletingPathExtension];
@@ -133,6 +111,7 @@ static NSString *imageID;
     }
     return %orig;
 }
+
 %new
 - (BOOL)isJSONResponse:(NSURLResponse *)response {
     if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
@@ -144,6 +123,7 @@ static NSString *imageID;
     }
     return NO;
 }
+
 %new
 - (void)useDummyDataWithCompletionHandler:(void (^)(NSData *, NSURLResponse *, NSError *))completionHandler {
     // Create dummy data
@@ -194,6 +174,37 @@ static NSString *imageID;
 }
 %end
 
+// Implementation derived from https://github.com/EthanArbuckle/Apollo-CustomApiCredentials/blob/main/Tweak.m
+// Credits to @EthanArbuckle for the original implementation
+
+@interface __NSCFLocalSessionTask : NSObject <NSCopying, NSProgressReporting>
+@end
+
+%hook __NSCFLocalSessionTask
+
+- (void)_onqueue_resume {
+    // Grab the request url
+    NSURLRequest *request =  [self valueForKey:@"_originalRequest"];
+    NSString *requestURL = request.URL.absoluteString;
+
+    // Drop requests to analytics/apns services
+    if ([requestURL containsString:@"https://apollopushserver.xyz"] || [requestURL containsString:@"telemetrydeck.com"]) {
+        return;
+    }
+
+    // Intercept modified "unproxied" Imgur requests and replace Authorization header with custom client ID
+    if ([requestURL containsString:@"https://api.imgur.com/"]) {
+        NSMutableURLRequest *mutableRequest = [request mutableCopy];
+        // Insert the api credential and update the request on this session task
+        [mutableRequest setValue:[NSString stringWithFormat:@"Client-ID %@", sImgurClientId] forHTTPHeaderField:@"Authorization"];
+        [self setValue:mutableRequest forKey:@"_originalRequest"];
+        [self setValue:mutableRequest forKey:@"_currentRequest"];
+    }
+
+    %orig;
+}
+
+%end
 
 @interface SettingsGeneralViewController : UIViewController
 @end
@@ -212,6 +223,7 @@ static NSString *imageID;
 
 %end
 
+// Auto-dismiss periodic wallpaper alert
 @interface _TtGC7SwiftUI19UIHostingControllerV6Apollo18WallpaperAlertView_ : UIViewController
 @end
 
@@ -233,12 +245,14 @@ static NSString *imageID;
 
     %init(SettingsGeneralViewController=objc_getClass("Apollo.SettingsGeneralViewController"));
 
+    // Sideload fixes
     rebind_symbols((struct rebinding[3]) {
         {"SecItemAdd", (void *)SecItemAdd_replacement, (void **)&SecItemAdd_orig},
         {"SecItemCopyMatching", (void *)SecItemCopyMatching_replacement, (void **)&SecItemCopyMatching_orig},
         {"SecItemUpdate", (void *)SecItemUpdate_replacement, (void **)&SecItemUpdate_orig}
     }, 3);
 
+    // Redirect user to Custom API modal if no API credentials are set
     if ([sRedditClientId length] == 0) {
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             UIWindow *mainWindow = ((UIWindowScene *)UIApplication.sharedApplication.connectedScenes.anyObject).windows.firstObject;
@@ -253,7 +267,7 @@ static NSString *imageID;
             [CATransaction begin];
             [CATransaction setCompletionBlock:^{
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                    // Invoke Custom API bar button item
+                    // Invoke Custom API button
                     UIBarButtonItem *rightBarButtonItem = settingsGeneralViewController.navigationItem.rightBarButtonItem;
                     [UIApplication.sharedApplication sendAction:rightBarButtonItem.action to:rightBarButtonItem.target from:settingsGeneralViewController forEvent:nil];
                 });
