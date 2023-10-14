@@ -149,7 +149,7 @@
     aboutLabel.textAlignment = NSTextAlignmentCenter;
     [stackView addArrangedSubview:aboutLabel];
 
-    NSURL *githubLinkURL = [NSURL URLWithString:@"https://github.com/JeffreyCA/Apollo-CustomApiCredentialsPlus"];
+    NSURL *githubLinkURL = [NSURL URLWithString:@"https://github.com/JeffreyCA/Apollo-ImprovedCustomApi"];
     UIButton *githubButton = [self creditsButton:@"Open source on GitHub" subtitle:@"@JeffreyCA" linkURL:githubLinkURL b64Image:B64Github];
     [stackView addArrangedSubview:githubButton];
 

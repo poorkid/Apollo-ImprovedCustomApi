@@ -6,10 +6,10 @@ THEOS_LEAN_AND_MEAN = 1
 
 include $(THEOS)/makefiles/common.mk
 
-TWEAK_NAME = ApolloCustomApiCredentialsPlus
+TWEAK_NAME = ApolloImprovedCustomApi
 
-ApolloCustomApiCredentialsPlus_FILES = Tweak.x CustomAPIViewController.m fishhook.c
-ApolloCustomApiCredentialsPlus_FRAMEWORKS = UIKit WebKit
-ApolloCustomApiCredentialsPlus_CFLAGS = -fobjc-arc -Wno-unguarded-availability-new -Wno-arc-performSelector-leaks
+ApolloImprovedCustomApi_FILES = Tweak.x CustomAPIViewController.m fishhook.c
+ApolloImprovedCustomApi_FRAMEWORKS = UIKit WebKit
+ApolloImprovedCustomApi_CFLAGS = -fobjc-arc -Wno-unguarded-availability-new -Wno-arc-performSelector-leaks
 
 include $(THEOS_MAKE_PATH)/tweak.mk

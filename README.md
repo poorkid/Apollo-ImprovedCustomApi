@@ -1,4 +1,4 @@
-# Apollo-CustomApiCredentialsPlus
+# Apollo-ImprovedCustomApi
 Apollo for Reddit with in-app configurable API keys. This tweak includes several fixes to Imgur loading problems that other similar tweaks may have.
 
 <img src="img/demo.gif" alt="demo" width="250"/>
