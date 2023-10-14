@@ -3,6 +3,17 @@ Apollo for Reddit with in-app configurable API keys. This tweak includes several
 
 <img src="img/demo.gif" alt="demo" width="250"/>
 
+## Sideloadly
+Recommended configuration:
+- **Use automatic bundle ID**: *unchecked*
+    - Enter a custom one (e.g. com.foo.Apollo)
+- **Signing Mode**: Apple ID Sideload
+- **Inject dylibs/frameworks**: *checked*
+    - Add the .deb file using **+dylib/deb/bundle**
+    - **Cydia Substrate**: *checked*
+    - **Substitute**: *unchecked*
+    - **Sideload Spoofer**: *unchecked*
+
 ## Build
 ### Requirements
 - [Theos](https://github.com/theos/theos)
