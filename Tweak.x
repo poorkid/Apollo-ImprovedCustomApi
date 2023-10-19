@@ -223,27 +223,15 @@ static NSString *imageID;
 
 %end
 
-// Auto-dismiss periodic wallpaper alert
-@interface _TtGC7SwiftUI19UIHostingControllerV6Apollo18WallpaperAlertView_ : UIViewController
-@end
-
-%hook _TtGC7SwiftUI19UIHostingControllerV6Apollo18WallpaperAlertView_
-
-- (void)viewDidAppear:(BOOL)animated {
-    %orig(animated);
-    UITabBarController *tabBarController = (UITabBarController *) [self presentingViewController];
-    if ([tabBarController selectedIndex] == 0) {
-        [tabBarController dismissViewControllerAnimated:YES completion:nil];
-    }
-}
-
-%end
-
 %ctor {
     sRedditClientId = (NSString *)[[[NSUserDefaults standardUserDefaults] objectForKey:UDKeyRedditClientId] ?: @"" copy];
     sImgurClientId = (NSString *)[[[NSUserDefaults standardUserDefaults] objectForKey:UDKeyImgurClientId] ?: @"" copy];
 
     %init(SettingsGeneralViewController=objc_getClass("Apollo.SettingsGeneralViewController"));
+
+    // Suppress wallpaper prompt
+    NSDate *dateIn90d = [NSDate dateWithTimeIntervalSinceNow:60*60*24*90];
+    [[NSUserDefaults standardUserDefaults] setObject:dateIn90d forKey:@"WallpaperPromptMostRecent2"];
 
     // Sideload fixes
     rebind_symbols((struct rebinding[3]) {
