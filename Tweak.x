@@ -62,17 +62,23 @@ static OSStatus SecItemUpdate_replacement(CFDictionaryRef query, CFDictionaryRef
     return %orig();
 }
 
-// Imgur Delete
+// Imgur Delete and album creation
 - (NSURLSessionDataTask*)dataTaskWithRequest:(NSURLRequest*)request completionHandler:(void (^)(NSData*, NSURLResponse*, NSError*))completionHandler {
     NSString *urlString = [[request URL] absoluteString];
-    NSString *oldPrefix = @"https://imgur-apiv3.p.rapidapi.com/3/image/";
-    NSString *newPrefix = @"https://api.imgur.com/3/image/";
+    NSString *oldImagePrefix = @"https://imgur-apiv3.p.rapidapi.com/3/image/";
+    NSString *newImagePrefix = @"https://api.imgur.com/3/image/";
+    NSString *oldAlbumPrefix = @"https://imgur-apiv3.p.rapidapi.com/3/album";
+    NSString *newAlbumPrefix = @"https://api.imgur.com/3/album";
 
-    if ([urlString hasPrefix:oldPrefix]) {
-        NSString *suffix = [urlString substringFromIndex:oldPrefix.length];
-        NSString *newUrlString = [newPrefix stringByAppendingString:suffix];
+    if ([urlString hasPrefix:oldImagePrefix]) {
+        NSString *suffix = [urlString substringFromIndex:oldImagePrefix.length];
+        NSString *newUrlString = [newImagePrefix stringByAppendingString:suffix];
         NSMutableURLRequest *modifiedRequest = [request mutableCopy];
         [modifiedRequest setURL:[NSURL URLWithString:newUrlString]];
+        return %orig(modifiedRequest,completionHandler);
+    } else if ([urlString isEqualToString:oldAlbumPrefix]) {
+        NSMutableURLRequest *modifiedRequest = [request mutableCopy];
+        [modifiedRequest setURL:[NSURL URLWithString:newAlbumPrefix]];
         return %orig(modifiedRequest,completionHandler);
     }
     return %orig();
