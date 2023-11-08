@@ -57,7 +57,12 @@ static OSStatus SecItemUpdate_replacement(CFDictionaryRef query, CFDictionaryRef
     if ([urlString isEqualToString:oldPrefix]) {
         NSMutableURLRequest *modifiedRequest = [request mutableCopy];
         [modifiedRequest setURL:[NSURL URLWithString:newPrefix]];
-        return %orig(modifiedRequest,bodyData,completionHandler);
+
+        // This seems to make uploads succeed more reliably, but not sure why... timing issue?
+        void (^newCompletionHandler)(NSData*, NSURLResponse*, NSError*) = ^(NSData *data, NSURLResponse *response, NSError *error) {
+            completionHandler(data, response, error);
+        };
+        return %orig(modifiedRequest,bodyData,newCompletionHandler);
     }
     return %orig();
 }
