@@ -58,11 +58,16 @@ static OSStatus SecItemUpdate_replacement(CFDictionaryRef query, CFDictionaryRef
         NSMutableURLRequest *modifiedRequest = [request mutableCopy];
         [modifiedRequest setURL:[NSURL URLWithString:newPrefix]];
 
-        // This seems to make uploads succeed more reliably, but not sure why... timing issue?
+        // Hacky fix for multi-image upload failures - the first attempt may fail but subsequent attempts will succeed
+        dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
         void (^newCompletionHandler)(NSData*, NSURLResponse*, NSError*) = ^(NSData *data, NSURLResponse *response, NSError *error) {
             completionHandler(data, response, error);
+            dispatch_semaphore_signal(semaphore);
         };
-        return %orig(modifiedRequest,bodyData,newCompletionHandler);
+        NSURLSessionUploadTask *task = %orig(modifiedRequest,bodyData,newCompletionHandler);
+        [task resume];
+        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+        return task;
     }
     return %orig();
 }
