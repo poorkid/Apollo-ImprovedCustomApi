@@ -3,6 +3,10 @@ Apollo for Reddit with in-app configurable API keys. This tweak includes several
 
 <img src="img/demo.gif" alt="demo" width="250"/>
 
+## Known issues
+- Imgur multi-image upload
+    - Uploads usually fail on the first attempt but subsequent retries should succeed
+
 ## Sideloadly
 Recommended configuration:
 - **Use automatic bundle ID**: *unchecked*
