@@ -4,16 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [v1.0.2b] - 2023-11-07
-- Fix Imgur multi-image upload
+## [v1.0.2c] - 2023-11-08
+- Fix Imgur multi-image uploads (first attempt usually fails but subsequent retries should succeed)
 
 ## [v1.0.1] - 2023-10-18
-- Made change to suppress wallpaper popup entirely
+- Suppress wallpaper popup entirely
 
 ## [v1.0.0] - 2023-10-13
 - Initial release
 
-[v1.0.2b]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.1...v1.0.2b
+[v1.0.2c]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.1...v1.0.2c
 [v1.0.1]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.0...v1.0.1
 [v1.0.0]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.0
 
