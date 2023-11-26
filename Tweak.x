@@ -30,6 +30,19 @@ static OSStatus SecItemUpdate_replacement(CFDictionaryRef query, CFDictionaryRef
     return ((OSStatus (*)(CFDictionaryRef, CFDictionaryRef))SecItemUpdate_orig)((__bridge CFDictionaryRef)strippedQuery, attributesToUpdate);
 }
 
+%hook NSURL
+
+- (NSString *)host {
+    NSString *originalHost = %orig;
+    // Rewrite x.com links as twitter.com
+    if ([originalHost isEqualToString:@"x.com"]) {
+        return @"twitter.com";
+    }
+    return originalHost;
+}
+
+%end
+
 // Replace Reddit API client ID
 %hook RDKOAuthCredential
 
