@@ -121,7 +121,6 @@ static NSArray *blockedUrls = @[
 static NSString *imageID;
 - (NSURLSessionDataTask *)dataTaskWithURL:(NSURL *)url completionHandler:(void (^)(NSData *, NSURLResponse *, NSError *))completionHandler {
     imageID = [url.lastPathComponent stringByDeletingPathExtension];
-    // Remove unwanted messages on app startup
     if ([url.absoluteString containsString:@"https://apollogur.download/api/image/"]) {
         NSString *modifiedURLString = [NSString stringWithFormat:@"https://api.imgur.com/3/image/%@.json", imageID];
         NSURL *modifiedURL = [NSURL URLWithString:modifiedURLString];
