@@ -30,6 +30,16 @@ static OSStatus SecItemUpdate_replacement(CFDictionaryRef query, CFDictionaryRef
     return ((OSStatus (*)(CFDictionaryRef, CFDictionaryRef))SecItemUpdate_orig)((__bridge CFDictionaryRef)strippedQuery, attributesToUpdate);
 }
 
+static NSArray *blockedUrls = @[
+    @"https://apollopushserver.xyz",
+    @"telemetrydeck.com",
+    @"https://apollogur.download/api/apollonouncement",
+    @"https://apollogur.download/api/easter_sale",
+    @"https://apollogur.download/api/html_codes",
+    @"https://apollogur.download/api/refund_screen_config",
+    @"https://apollogur.download/api/goodbye_wallpaper"
+];
+
 %hook NSURL
 
 - (NSString *)host {
@@ -112,12 +122,7 @@ static NSString *imageID;
 - (NSURLSessionDataTask *)dataTaskWithURL:(NSURL *)url completionHandler:(void (^)(NSData *, NSURLResponse *, NSError *))completionHandler {
     imageID = [url.lastPathComponent stringByDeletingPathExtension];
     // Remove unwanted messages on app startup
-    if ([url.absoluteString containsString:@"https://apollogur.download/api/apollonouncement"] ||
-        [url.absoluteString containsString:@"https://apollogur.download/api/easter_sale"] ||
-        [url.absoluteString containsString:@"https://apollogur.download/api/html_codes"] ||
-        [url.absoluteString containsString:@"https://apollogur.download/api/refund_screen_config"]) {
-        return nil;
-    } else if ([url.absoluteString containsString:@"https://apollogur.download/api/image/"]) {
+    if ([url.absoluteString containsString:@"https://apollogur.download/api/image/"]) {
         NSString *modifiedURLString = [NSString stringWithFormat:@"https://api.imgur.com/3/image/%@.json", imageID];
         NSURL *modifiedURL = [NSURL URLWithString:modifiedURLString];
         // Access the modified URL to get the actual data
@@ -216,9 +221,11 @@ static NSString *imageID;
     NSURLRequest *request =  [self valueForKey:@"_originalRequest"];
     NSString *requestURL = request.URL.absoluteString;
 
-    // Drop requests to analytics/apns services
-    if ([requestURL containsString:@"https://apollopushserver.xyz"] || [requestURL containsString:@"telemetrydeck.com"]) {
-        return;
+    // Drop blocked URLs
+    for (NSString *blockedUrl in blockedUrls) {
+        if ([requestURL containsString:blockedUrl]) {
+            return;
+        }
     }
 
     // Intercept modified "unproxied" Imgur requests and replace Authorization header with custom client ID
