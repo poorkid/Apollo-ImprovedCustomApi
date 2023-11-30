@@ -176,6 +176,7 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
 }
 %end
 
+// Tappable text link in an inbox item (*not* the links in the PM chat bubbles)
 %hook _TtC6Apollo13InboxCellNode
 
 -(void)textNode:(id)textNode tappedLinkAttribute:(id)attr value:(NSURL *)url atPoint:(struct CGPoint)point textRange:(struct _NSRange)range {
@@ -190,6 +191,7 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
 
 %end
 
+// Text view containing markdown and tappable links, can be in the header of a post or a comment
 %hook _TtC6Apollo12MarkdownNode
 
 -(void)textNode:(id)textNode tappedLinkAttribute:(id)attr value:(NSURL *)url atPoint:(struct CGPoint)point textRange:(struct _NSRange)range {
@@ -204,6 +206,7 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
 
 %end
 
+// Tappable link button of a post in a list view (list view refers to home feed, subreddit view, etc.)
 %hook _TtC6Apollo13RichMediaNode
 - (void)linkButtonTappedWithSender:(_TtC6Apollo14LinkButtonNode *)arg1 {
     RDKLink *rdkLink = MSHookIvar<RDKLink *>(self, "link");
@@ -243,6 +246,7 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
 
 %end
 
+// Single comment under an individual post
 %hook _TtC6Apollo15CommentCellNode
 
 - (void)linkButtonTappedWithSender:(_TtC6Apollo14LinkButtonNode *)arg1 {
@@ -263,6 +267,7 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
 
 %end
 
+// Component at the top of a single post view ("header")
 %hook _TtC6Apollo22CommentsHeaderCellNode
 
 -(void)linkButtonNodeTappedWithSender:(_TtC6Apollo14LinkButtonNode *)arg1 {
