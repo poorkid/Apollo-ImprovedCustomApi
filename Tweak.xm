@@ -1,9 +1,11 @@
 #import <Foundation/Foundation.h>
 #import <objc/runtime.h>
 
-#import "CustomAPIViewController.h"
-#import "UserDefaultConstants.h"
 #import "fishhook.h"
+#import "CustomAPIViewController.h"
+#import "Tweak.h"
+#import "UIWindow+Apollo.h"
+#import "UserDefaultConstants.h"
 
 // Sideload fixes
 static NSDictionary *stripGroupAccessAttr(CFDictionaryRef attributes) {
@@ -40,15 +42,252 @@ static NSArray *blockedUrls = @[
     @"https://apollogur.download/api/goodbye_wallpaper"
 ];
 
-%hook NSURL
+// Regex for opaque share links
+static NSString *const ShareLinkRegexPattern = @"^(?:https?:)?//(?:www\\.)?reddit\\.com/r/(\\w+)/s/(\\w+)$";
+static NSRegularExpression *ShareLinkRegex;
 
+// Cache storing resolved share URLs - this is an optimization so that we don't need to resolve the share URL every time
+static NSCache <NSString *, ShareUrlTask *> *cache;
+
+@implementation ShareUrlTask
+- (instancetype)init {
+    self = [super init];
+    if (self) {
+        _dispatchGroup = NULL;
+        _resolvedURL = NULL;
+    }
+    return self;
+}
+@end
+
+/// Helper functions for resolving share URLs
+
+// Present loading alert on top of current view controller
+static UIViewController *PresentResolvingShareLinkAlert() {
+    __block UIWindow *lastKeyWindow = nil;
+    for (UIScene *scene in [UIApplication sharedApplication].connectedScenes) {
+        if ([scene isKindOfClass:[UIWindowScene class]]) {
+            UIWindowScene *windowScene = (UIWindowScene *)scene;
+            if (windowScene.keyWindow) {
+                lastKeyWindow = windowScene.keyWindow;
+            }
+        }
+    }
+
+    UIViewController *visibleViewController = lastKeyWindow.visibleViewController;
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:nil message:@"Resolving share link..." preferredStyle:UIAlertControllerStyleAlert];
+
+    [visibleViewController presentViewController:alertController animated:YES completion:nil];
+    return alertController;
+}
+
+// Strip tracking parameters from resolved share URL
+static NSURL *RemoveShareTrackingParams(NSURL *url) {
+    NSURLComponents *components = [NSURLComponents componentsWithURL:url resolvingAgainstBaseURL:NO];
+    NSMutableArray *queryItems = [NSMutableArray arrayWithArray:components.queryItems];
+    [queryItems filterUsingPredicate:[NSPredicate predicateWithFormat:@"name == %@", @"context"]];
+    components.queryItems = queryItems;
+    return components.URL;
+}
+
+// Start async task to resolve share URL
+static void StartShareURLResolveTask(NSString *urlString) {
+    __block ShareUrlTask *task;
+    @synchronized(cache) { // needed?
+        task = [cache objectForKey:urlString];
+        if (task) {
+            return;
+        }
+
+        dispatch_group_t dispatch_group = dispatch_group_create();
+        task = [[ShareUrlTask alloc] init];
+        task.dispatchGroup = dispatch_group;
+        [cache setObject:task forKey:urlString];
+    }
+
+    NSURL *url = [NSURL URLWithString:urlString];
+    dispatch_group_enter(task.dispatchGroup);
+    NSURLSessionTask *getTask = [[NSURLSession sharedSession] dataTaskWithURL:url completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        if (!error) {
+            NSURL *redirectedURL = [(NSHTTPURLResponse *)response URL];
+            NSURL *cleanedURL = RemoveShareTrackingParams(redirectedURL);
+            NSString *cleanUrlString = [cleanedURL absoluteString];
+            task.resolvedURL = cleanUrlString;
+        } else {
+            task.resolvedURL = urlString;
+        }
+        dispatch_group_leave(task.dispatchGroup);
+    }];
+
+    [getTask resume];
+}
+
+// Asynchronously wait for share URL to resolve
+static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSString *), void (^ignoreHandler)(void)){
+    ShareUrlTask *task = [cache objectForKey:urlString];
+    if (!task) {
+        // The NSURL initWithString hook might not catch every share URL, so check one more time and enqueue a task if needed
+        NSTextCheckingResult *match = [ShareLinkRegex firstMatchInString:urlString options:0 range:NSMakeRange(0, [urlString length])];
+        if (!match) {
+            ignoreHandler();
+            return;
+        }
+        StartShareURLResolveTask(urlString);
+        task = [cache objectForKey:urlString];
+    }
+
+    if (task.resolvedURL) {
+        successHandler(task.resolvedURL);
+        return;
+    } else {
+        // Wait for task to finish and show loading alert to not block main thread
+        UIViewController *shareAlertController = PresentResolvingShareLinkAlert();
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            dispatch_group_wait(task.dispatchGroup, DISPATCH_TIME_FOREVER);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [shareAlertController dismissViewControllerAnimated:YES completion:^{
+                    successHandler(task.resolvedURL);
+                }];
+            });
+        });
+    }
+}
+
+%hook NSURL
+// Asynchronously resolve share URLs in background
+// This is an optimization to "pre-resolve" share URLs so that by the time one taps a share URL it should already be resolved
+// On slower network connections, there may still be a loading alert
+- (id)initWithString:(id)string {
+    NSTextCheckingResult *match = [ShareLinkRegex firstMatchInString:string options:0 range:NSMakeRange(0, [string length])];
+    if (match) {
+        // This exits early if already in cache
+        StartShareURLResolveTask(string);
+    }
+    return %orig;
+}
+
+// Rewrite x.com links as twitter.com
 - (NSString *)host {
     NSString *originalHost = %orig;
-    // Rewrite x.com links as twitter.com
     if ([originalHost isEqualToString:@"x.com"]) {
         return @"twitter.com";
     }
     return originalHost;
+}
+%end
+
+%hook _TtC6Apollo13InboxCellNode
+
+-(void)textNode:(id)textNode tappedLinkAttribute:(id)attr value:(NSURL *)url atPoint:(struct CGPoint)point textRange:(struct _NSRange)range {
+    void (^ignoreHandler)(void) = ^{
+        %orig;
+    };
+    void (^successHandler)(NSString *) = ^(NSString *resolvedURL) {
+        %orig(textNode, attr, [NSURL URLWithString:resolvedURL], point, range);
+    };
+    TryResolveShareUrl([url absoluteString], successHandler, ignoreHandler);
+}
+
+%end
+
+%hook _TtC6Apollo12MarkdownNode
+
+-(void)textNode:(id)textNode tappedLinkAttribute:(id)attr value:(NSURL *)url atPoint:(struct CGPoint)point textRange:(struct _NSRange)range {
+    void (^ignoreHandler)(void) = ^{
+        %orig;
+    };
+    void (^successHandler)(NSString *) = ^(NSString *resolvedURL) {
+        %orig(textNode, attr, [NSURL URLWithString:resolvedURL], point, range);
+    };
+    TryResolveShareUrl([url absoluteString], successHandler, ignoreHandler);
+}
+
+%end
+
+%hook _TtC6Apollo13RichMediaNode
+- (void)linkButtonTappedWithSender:(_TtC6Apollo14LinkButtonNode *)arg1 {
+    RDKLink *rdkLink = MSHookIvar<RDKLink *>(self, "link");
+    NSURL *rdkLinkURL;
+    if (rdkLink) {
+        rdkLinkURL = rdkLink.URL;
+    }
+
+    NSURL *url = MSHookIvar<NSURL *>(arg1, "url");
+    NSString *urlString = [url absoluteString];
+
+    void (^ignoreHandler)(void) = ^{
+        %orig;
+    };
+    void (^successHandler)(NSString *) = ^(NSString *resolvedURL) {
+        NSURL *newURL = [NSURL URLWithString:resolvedURL];
+        MSHookIvar<NSURL *>(arg1, "url") = newURL;
+        if (rdkLink) {
+            MSHookIvar<RDKLink *>(self, "link").URL = newURL;
+        }
+        %orig;
+        MSHookIvar<NSURL *>(arg1, "url") = url;
+        MSHookIvar<RDKLink *>(self, "link").URL = rdkLinkURL;
+    };
+    TryResolveShareUrl(urlString, successHandler, ignoreHandler);
+}
+
+-(void)textNode:(id)textNode tappedLinkAttribute:(id)attr value:(NSURL *)url atPoint:(struct CGPoint)point textRange:(struct _NSRange)range {
+    void (^ignoreHandler)(void) = ^{
+        %orig;
+    };
+    void (^successHandler)(NSString *) = ^(NSString *resolvedURL) {
+        %orig(textNode, attr, [NSURL URLWithString:resolvedURL], point, range);
+    };
+    TryResolveShareUrl([url absoluteString], successHandler, ignoreHandler);
+}
+
+%end
+
+%hook _TtC6Apollo15CommentCellNode
+
+- (void)linkButtonTappedWithSender:(_TtC6Apollo14LinkButtonNode *)arg1 {
+    %log;
+    NSURL *url = MSHookIvar<NSURL *>(arg1, "url");
+    NSString *urlString = [url absoluteString];
+
+    void (^ignoreHandler)(void) = ^{
+        %orig;
+    };
+    void (^successHandler)(NSString *) = ^(NSString *resolvedURL) {
+        MSHookIvar<NSURL *>(arg1, "url") = [NSURL URLWithString:resolvedURL];
+        %orig;
+        MSHookIvar<NSURL *>(arg1, "url") = url;
+    };
+    TryResolveShareUrl(urlString, successHandler, ignoreHandler);
+}
+
+%end
+
+%hook _TtC6Apollo22CommentsHeaderCellNode
+
+-(void)linkButtonNodeTappedWithSender:(_TtC6Apollo14LinkButtonNode *)arg1 {
+    RDKLink *rdkLink = MSHookIvar<RDKLink *>(self, "link");
+    NSURL *rdkLinkURL;
+    if (rdkLink) {
+        rdkLinkURL = rdkLink.URL;
+    }
+    NSURL *url = MSHookIvar<NSURL *>(arg1, "url");
+    NSString *urlString = [url absoluteString];
+
+    void (^ignoreHandler)(void) = ^{
+        %orig;
+    };
+    void (^successHandler)(NSString *) = ^(NSString *resolvedURL) {
+        NSURL *newURL = [NSURL URLWithString:resolvedURL];
+        MSHookIvar<NSURL *>(arg1, "url") = newURL;
+        if (rdkLink) {
+            MSHookIvar<RDKLink *>(self, "link").URL = newURL;
+        }
+        %orig;
+        MSHookIvar<NSURL *>(arg1, "url") = url;
+        MSHookIvar<RDKLink *>(self, "link").URL = rdkLinkURL;
+    };
+    TryResolveShareUrl(urlString, successHandler, ignoreHandler);
 }
 
 %end
@@ -259,6 +498,10 @@ static NSString *imageID;
 %end
 
 %ctor {
+    cache = [NSCache new];
+    NSError *error = NULL;
+    ShareLinkRegex = [NSRegularExpression regularExpressionWithPattern:ShareLinkRegexPattern options:NSRegularExpressionCaseInsensitive error:&error];
+
     sRedditClientId = (NSString *)[[[NSUserDefaults standardUserDefaults] objectForKey:UDKeyRedditClientId] ?: @"" copy];
     sImgurClientId = (NSString *)[[[NSUserDefaults standardUserDefaults] objectForKey:UDKeyImgurClientId] ?: @"" copy];
 

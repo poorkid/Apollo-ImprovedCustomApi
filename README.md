@@ -1,13 +1,22 @@
 # Apollo-ImprovedCustomApi
 [![Build and release](https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/actions/workflows/buildapp.yml/badge.svg)](https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/actions/workflows/buildapp.yml)
 
-Apollo for Reddit with in-app configurable API keys. This tweak includes several fixes with Twitter posts (handles x.com links properly), Imgur integration (viewing & uploading) that other similar tweaks may have, and also suppresses the annoying wallpaper popup.
+Apollo for Reddit with in-app configurable API keys and several fixes and improvements. Tested on version 1.15.11.
 
 <img src="img/demo.gif" alt="demo" width="250"/>
 
+## Features
+- Use Apollo for Reddit with your own Reddit and Imgur API keys
+- Working Imgur integration (view, delete, and upload single images and multi-image albums) 
+- Handle x.com links as Twitter links so that they can be opened in the Twitter app
+- Suppress unwanted messages on app startup (wallpaper popup, in-app announcements, etc)
+- Support new share link format (reddit.com/r/subreddit/s/xxxxxx) so they open like any other post and not in a browser
+
 ## Known issues
+- Apollo Ultra features may cause app to crash 
 - Imgur multi-image upload
     - Uploads usually fail on the first attempt but subsequent retries should succeed
+- Share URLs in private messages and long-tapping them still open in the in-app browser
 
 ## Sideloadly
 Recommended configuration:
