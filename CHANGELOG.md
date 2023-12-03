@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.0.5] - 2023-12-02
+
+- Fix crash when tapping on spoiler tag
+
 ## [v1.0.4] - 2023-11-29
 
 Add support for share links (e.g. `reddit.com/r/subreddit/s/xxxxxx`) in Apollo. These links are obfuscated and require loading them in the background to resolve them to the standard Reddit link format that can be understood by 3rd party apps.
@@ -25,9 +29,9 @@ There are currently a few limitations:
 ## [v1.0.0] - 2023-10-13
 - Initial release
 
+[v1.0.5]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.4...v1.0.5
 [v1.0.4]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.3b...v1.0.4
 [v1.0.3b]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.2c...v1.0.3b
 [v1.0.2c]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.1...v1.0.2c
 [v1.0.1]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.0...v1.0.1
 [v1.0.0]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.0
-

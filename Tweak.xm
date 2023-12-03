@@ -179,14 +179,18 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
 // Tappable text link in an inbox item (*not* the links in the PM chat bubbles)
 %hook _TtC6Apollo13InboxCellNode
 
--(void)textNode:(id)textNode tappedLinkAttribute:(id)attr value:(NSURL *)url atPoint:(struct CGPoint)point textRange:(struct _NSRange)range {
+-(void)textNode:(id)textNode tappedLinkAttribute:(id)attr value:(id)val atPoint:(struct CGPoint)point textRange:(struct _NSRange)range {
+    if (![val isKindOfClass:[NSURL class]]) {
+        %orig;
+        return;
+    }
     void (^ignoreHandler)(void) = ^{
         %orig;
     };
     void (^successHandler)(NSString *) = ^(NSString *resolvedURL) {
         %orig(textNode, attr, [NSURL URLWithString:resolvedURL], point, range);
     };
-    TryResolveShareUrl([url absoluteString], successHandler, ignoreHandler);
+    TryResolveShareUrl([val absoluteString], successHandler, ignoreHandler);
 }
 
 %end
@@ -194,14 +198,18 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
 // Text view containing markdown and tappable links, can be in the header of a post or a comment
 %hook _TtC6Apollo12MarkdownNode
 
--(void)textNode:(id)textNode tappedLinkAttribute:(id)attr value:(NSURL *)url atPoint:(struct CGPoint)point textRange:(struct _NSRange)range {
+-(void)textNode:(id)textNode tappedLinkAttribute:(id)attr value:(id)val atPoint:(struct CGPoint)point textRange:(struct _NSRange)range {
+    if (![val isKindOfClass:[NSURL class]]) {
+        %orig;
+        return;
+    }
     void (^ignoreHandler)(void) = ^{
         %orig;
     };
     void (^successHandler)(NSString *) = ^(NSString *resolvedURL) {
         %orig(textNode, attr, [NSURL URLWithString:resolvedURL], point, range);
     };
-    TryResolveShareUrl([url absoluteString], successHandler, ignoreHandler);
+    TryResolveShareUrl([val absoluteString], successHandler, ignoreHandler);
 }
 
 %end
@@ -234,14 +242,18 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
     TryResolveShareUrl(urlString, successHandler, ignoreHandler);
 }
 
--(void)textNode:(id)textNode tappedLinkAttribute:(id)attr value:(NSURL *)url atPoint:(struct CGPoint)point textRange:(struct _NSRange)range {
+-(void)textNode:(id)textNode tappedLinkAttribute:(id)attr value:(id)val atPoint:(struct CGPoint)point textRange:(struct _NSRange)range {
+    if (![val isKindOfClass:[NSURL class]]) {
+        %orig;
+        return;
+    }
     void (^ignoreHandler)(void) = ^{
         %orig;
     };
     void (^successHandler)(NSString *) = ^(NSString *resolvedURL) {
         %orig(textNode, attr, [NSURL URLWithString:resolvedURL], point, range);
     };
-    TryResolveShareUrl([url absoluteString], successHandler, ignoreHandler);
+    TryResolveShareUrl([val absoluteString], successHandler, ignoreHandler);
 }
 
 %end
