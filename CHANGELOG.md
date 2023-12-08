@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.0.7] - 2023-12-07
+
+- Add support for resolving Reddit media share links ([#9](https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/pull/9)) - thanks [@mmshivesh](https://github.com/mmshivesh)!
+
 ## [v1.0.5] - 2023-12-02
 
 - Fix crash when tapping on spoiler tag
@@ -29,6 +33,7 @@ There are currently a few limitations:
 ## [v1.0.0] - 2023-10-13
 - Initial release
 
+[v1.0.7]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.5...v1.0.7
 [v1.0.5]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.4...v1.0.5
 [v1.0.4]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.3b...v1.0.4
 [v1.0.3b]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.2c...v1.0.3b

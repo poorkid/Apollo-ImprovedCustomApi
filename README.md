@@ -11,6 +11,7 @@ Apollo for Reddit with in-app configurable API keys and several fixes and improv
 - Handle x.com links as Twitter links so that they can be opened in the Twitter app
 - Suppress unwanted messages on app startup (wallpaper popup, in-app announcements, etc)
 - Support new share link format (reddit.com/r/subreddit/s/xxxxxx) so they open like any other post and not in a browser
+- Support media share links (reddit.com/media?url=)
 
 ## Known issues
 - Apollo Ultra features may cause app to crash 
