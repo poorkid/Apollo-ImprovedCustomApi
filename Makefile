@@ -1,6 +1,6 @@
 ARCHS = arm64
 
-TARGET := iphone:clang:latest:15.0
+TARGET := iphone:clang:latest:14.0
 INSTALL_TARGET_PROCESSES = Apollo
 THEOS_LEAN_AND_MEAN = 1
 

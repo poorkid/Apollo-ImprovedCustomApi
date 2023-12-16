@@ -12,6 +12,25 @@
   return [UIImage imageWithData:data];
 }
 
+- (UIStackView *)createToggleSwitchWithKey:(NSString *)key labelText:(NSString *)text action:(SEL)action {
+    UISwitch *toggleSwitch = [[UISwitch alloc] init];
+
+    toggleSwitch.on = [[NSUserDefaults standardUserDefaults] boolForKey:key];
+    [toggleSwitch addTarget:self action:action forControlEvents:UIControlEventValueChanged];
+
+    UILabel *label = [[UILabel alloc] init];
+    label.text = text;
+    label.textAlignment = NSTextAlignmentLeft;
+
+    UIStackView *toggleStackView = [[UIStackView alloc] initWithArrangedSubviews:@[label, toggleSwitch]];
+    toggleStackView.axis = UILayoutConstraintAxisHorizontal;
+    toggleStackView.distribution = UIStackViewDistributionFill;
+    toggleStackView.alignment = UIStackViewAlignmentCenter;
+    toggleStackView.spacing = 10;
+
+    return toggleStackView;
+}
+
 - (UIButton *)creditsButton:(NSString *)labelText subtitle:(NSString *)subtitle linkURL:(NSURL *)linkURL b64Image:(NSString *)b64Image {
     UIButtonConfiguration *buttonConfiguration = [UIButtonConfiguration grayButtonConfiguration];
     buttonConfiguration.imagePadding = 15;
@@ -39,7 +58,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    self.title = @"Apollo API";
+    self.title = @"Custom API";
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone primaryAction:[UIAction actionWithHandler:^(UIAction * action) {
         [self dismissViewControllerAnimated:YES completion:nil];
     }]];
@@ -98,6 +117,15 @@
 
     [stackView addArrangedSubview:websiteButton];
     [stackView addArrangedSubview:imgurButton];
+
+    UIStackView *blockAnnouncementsStackView = [self createToggleSwitchWithKey:UDKeyBlockAnnouncements labelText:@"Block Announcements" action:@selector(blockAnnouncementsSwitchToggled:)];
+    [stackView addArrangedSubview:blockAnnouncementsStackView];
+
+    UIStackView *unreadCommentsStackView = [self createToggleSwitchWithKey:UDKeyApolloShowUnreadComments labelText:@"New Comments Highlightifier (Beta)" action:@selector(unreadCommentsSwitchToggled:)];
+    [stackView addArrangedSubview:unreadCommentsStackView];
+
+    UIStackView *weatherStackView = [self createToggleSwitchWithKey:UDKeyApolloSubredditWeather labelText:@"Subreddit Weather and Time (Beta)" action:@selector(weatherSwitchToggled:)];
+    [stackView addArrangedSubview:weatherStackView];
 
     UITextView *textView = [[UITextView alloc] init];
     textView.editable = NO;
@@ -184,6 +212,19 @@
         sImgurClientId = textField.text;
         [[NSUserDefaults standardUserDefaults] setValue:sImgurClientId forKey:UDKeyImgurClientId];
     }
+}
+
+- (void)unreadCommentsSwitchToggled:(UISwitch *)sender {
+    [[NSUserDefaults standardUserDefaults] setBool:sender.isOn forKey:UDKeyApolloShowUnreadComments];
+}
+
+- (void)weatherSwitchToggled:(UISwitch *)sender {
+    [[NSUserDefaults standardUserDefaults] setBool:sender.isOn forKey:UDKeyApolloSubredditWeather];
+}
+
+- (void)blockAnnouncementsSwitchToggled:(UISwitch *)sender {
+    sBlockAnnouncements = sender.isOn;
+    [[NSUserDefaults standardUserDefaults] setBool:sBlockAnnouncements forKey:UDKeyBlockAnnouncements];
 }
 
 @end

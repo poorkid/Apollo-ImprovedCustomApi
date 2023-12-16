@@ -1,5 +1,10 @@
-on: 
-  workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      prerelease:
+        description: 'Pre-release?'
+        required: true
+        type: boolean
 
 name: Build and release
 
@@ -21,7 +26,7 @@ jobs:
       - name: Parse control file version
         id: parse_control
         run: |
-          version=$(sed -n 's/^Version: //p' control)
+          version=$(sed -n 's/^Version: //p' control | sed 's/~/-/g')
           echo "TWEAK_VERSION=$version" >> "$GITHUB_OUTPUT"
 
       - name: Install Dependencies
@@ -53,3 +58,4 @@ jobs:
           tag_name: v${{ env.TWEAK_VERSION }}
           name: v${{ env.TWEAK_VERSION }}
           files: packages/*.deb
+          prerelease: ${{ inputs.prerelease }}

@@ -5,3 +5,5 @@
 
 NSString *sRedditClientId;
 NSString *sImgurClientId;
+
+BOOL sBlockAnnouncements;

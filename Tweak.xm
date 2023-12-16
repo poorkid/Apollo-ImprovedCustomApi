@@ -32,10 +32,11 @@ static OSStatus SecItemUpdate_replacement(CFDictionaryRef query, CFDictionaryRef
     return ((OSStatus (*)(CFDictionaryRef, CFDictionaryRef))SecItemUpdate_orig)((__bridge CFDictionaryRef)strippedQuery, attributesToUpdate);
 }
 
+static NSString *announcementUrl = @"https://apollogur.download/api/apollonouncement";
+
 static NSArray *blockedUrls = @[
     @"https://apollopushserver.xyz",
     @"telemetrydeck.com",
-    @"https://apollogur.download/api/apollonouncement",
     @"https://apollogur.download/api/easter_sale",
     @"https://apollogur.download/api/html_codes",
     @"https://apollogur.download/api/refund_screen_config",
@@ -495,6 +496,9 @@ static NSString *imageID;
             return;
         }
     }
+    if (sBlockAnnouncements && [requestURL containsString:announcementUrl]) {
+        return;
+    }
 
     // Intercept modified "unproxied" Imgur requests and replace Authorization header with custom client ID
     if ([requestURL containsString:@"https://api.imgur.com/"]) {
@@ -533,8 +537,12 @@ static NSString *imageID;
     ShareLinkRegex = [NSRegularExpression regularExpressionWithPattern:ShareLinkRegexPattern options:NSRegularExpressionCaseInsensitive error:&error];
     MediaShareLinkRegex = [NSRegularExpression regularExpressionWithPattern:MediaShareLinkPattern options:NSRegularExpressionCaseInsensitive error:&error];
 
+    NSDictionary *defaultValues = @{UDKeyBlockAnnouncements: @YES};
+    [[NSUserDefaults standardUserDefaults] registerDefaults:defaultValues];
+
     sRedditClientId = (NSString *)[[[NSUserDefaults standardUserDefaults] objectForKey:UDKeyRedditClientId] ?: @"" copy];
     sImgurClientId = (NSString *)[[[NSUserDefaults standardUserDefaults] objectForKey:UDKeyImgurClientId] ?: @"" copy];
+    sBlockAnnouncements = [[NSUserDefaults standardUserDefaults] boolForKey:UDKeyBlockAnnouncements];
 
     %init(SettingsGeneralViewController=objc_getClass("Apollo.SettingsGeneralViewController"));
 

@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.0.8] - 2023-12-15
+
+- Lower minimum iOS version requirement to 14.0
+- Toggleable settings for blocking announcements and some Ultra settings (not fully working, see [#1](https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/issues/1)). **These are the same as the previous experimental builds.**
+    - All toggles are located in Settings -> General -> Custom API
+    - New Comments Highlightifier shows new comment count badge, but doesn't highlight comments inside a thread
+    - Subreddit Weather and Time widget doesn't seem to work (not showing or loads infinitely)
+
 ## [v1.0.7] - 2023-12-07
 
 - Add support for resolving Reddit media share links ([#9](https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/pull/9)) - thanks [@mmshivesh](https://github.com/mmshivesh)!
@@ -33,6 +41,7 @@ There are currently a few limitations:
 ## [v1.0.0] - 2023-10-13
 - Initial release
 
+[v1.0.8]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.7...v1.0.8
 [v1.0.7]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.5...v1.0.7
 [v1.0.5]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.4...v1.0.5
 [v1.0.4]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.3b...v1.0.4
