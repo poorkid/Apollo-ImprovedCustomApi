@@ -336,37 +336,37 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
 // Randomise the trending subreddits list
 %hook NSBundle
 -(NSURL *)URLForResource:(NSString *)name withExtension:(NSString *)ext {
-	NSURL *url = %orig;
-	if ([name isEqualToString:@"trending-subreddits"] && [ext isEqualToString:@"plist"]) {
-		/*
-			- Parse plist
-			- Select random list of subreddits from the dict
-			- Add today's date to the dict, with the list as the value
-			- Return plist as a new file
-		*/
+    NSURL *url = %orig;
+    if ([name isEqualToString:@"trending-subreddits"] && [ext isEqualToString:@"plist"]) {
+        /*
+            - Parse plist
+            - Select random list of subreddits from the dict
+            - Add today's date to the dict, with the list as the value
+            - Return plist as a new file
+        */
 
-		NSMutableDictionary *dict = [[NSDictionary dictionaryWithContentsOfURL:url] mutableCopy];
+        NSMutableDictionary *dict = [[NSDictionary dictionaryWithContentsOfURL:url] mutableCopy];
 
-		// Select random array from dict
-		NSArray *keys = [dict allKeys];
-		NSString *randomKey = keys[arc4random_uniform((uint32_t)[keys count])];
-		NSArray *array = dict[randomKey];
+        // Select random array from dict
+        NSArray *keys = [dict allKeys];
+        NSString *randomKey = keys[arc4random_uniform((uint32_t)[keys count])];
+        NSArray *array = dict[randomKey];
 
-		// Get string of today's date
-		NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-		// ex: 2023-9-28 (28th September 2023)
-		[formatter setDateFormat:@"yyyy-M-d"];
+        // Get string of today's date
+        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+        // ex: 2023-9-28 (28th September 2023)
+        [formatter setDateFormat:@"yyyy-M-d"];
 
-		[dict setObject:array forKey:[formatter stringFromDate:[NSDate date]]];
+        [dict setObject:array forKey:[formatter stringFromDate:[NSDate date]]];
 
-		// write new file
-		NSString *tempPath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"trending-custom.plist"];
-		[[NSFileManager defaultManager] removeItemAtPath:tempPath error:nil]; // remove in case it exists
-		[dict writeToFile:tempPath atomically:YES];
+        // write new file
+        NSString *tempPath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"trending-custom.plist"];
+        [[NSFileManager defaultManager] removeItemAtPath:tempPath error:nil]; // remove in case it exists
+        [dict writeToFile:tempPath atomically:YES];
 
-		return [NSURL fileURLWithPath:tempPath];
-	}
-	return url;
+        return [NSURL fileURLWithPath:tempPath];
+    }
+    return url;
 }
 %end
 
