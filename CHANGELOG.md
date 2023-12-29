@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.0.9] - 2023-12-29
+
+- Randomize "trending subreddits list" so it doesn't show **iOS**, **Clock**, **Time**, **IfYouDontMind** all the time - thanks [@iCrazeiOS](https://github.com/iCrazeiOS)!
+    - Context: There isn't an official Reddit API to get the currently trending subreddits. Apollo has a hardcoded mapping of dates to trending subreddits in this file called `trending-subreddits.plist` that is bundled inside the .ipa. The last date entry is `2023-9-9`, which is why Apollo has been falling back to the default **iOS**, **Clock**, **Time**, **IfYouDontMind** subreddits lately.
+
 ## [v1.0.8] - 2023-12-15
 
 - Lower minimum iOS version requirement to 14.0
@@ -41,6 +46,7 @@ There are currently a few limitations:
 ## [v1.0.0] - 2023-10-13
 - Initial release
 
+[v1.0.9]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.8...v1.0.9
 [v1.0.8]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.7...v1.0.8
 [v1.0.7]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.5...v1.0.7
 [v1.0.5]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.4...v1.0.5
