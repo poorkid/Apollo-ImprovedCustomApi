@@ -44,7 +44,7 @@ static NSArray *blockedUrls = @[
 ];
 
 // Regex for opaque share links
-static NSString *const ShareLinkRegexPattern = @"^(?:https?:)?//(?:www\\.)?reddit\\.com/r/(\\w+)/s/(\\w+)$";
+static NSString *const ShareLinkRegexPattern = @"^(?:https?:)?//(?:www\\.)?reddit\\.com/(?:r|u)/(\\w+)/s/(\\w+)$";
 static NSRegularExpression *ShareLinkRegex;
 
 // Regex for media share links
