@@ -43,6 +43,8 @@ static NSArray *blockedUrls = @[
     @"https://apollogur.download/api/goodbye_wallpaper"
 ];
 
+static NSString *defaultUserAgent = @"Mozilla/5.0 (iPhone; CPU iPhone OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
+
 // Regex for opaque share links
 static NSString *const ShareLinkRegexPattern = @"^(?:https?:)?//(?:www\\.)?reddit\\.com/(?:r|u)/(\\w+)/s/(\\w+)$";
 static NSRegularExpression *ShareLinkRegex;
@@ -549,7 +551,11 @@ static NSString *imageID;
         if ([requestURL isEqualToString:@"https://api.imgur.com/3/image"]) {
             [mutableRequest setValue:@"image/jpeg" forHTTPHeaderField:@"Content-Type"];
         }
-
+        [self setValue:mutableRequest forKey:@"_originalRequest"];
+        [self setValue:mutableRequest forKey:@"_currentRequest"];
+    } else if ([requestURL containsString:@"https://oauth.reddit.com/"] || [requestURL containsString:@"https://www.reddit.com/"]) {
+        NSMutableURLRequest *mutableRequest = [request mutableCopy];
+        [mutableRequest setValue:defaultUserAgent forHTTPHeaderField:@"User-Agent"];
         [self setValue:mutableRequest forKey:@"_originalRequest"];
         [self setValue:mutableRequest forKey:@"_currentRequest"];
     }
