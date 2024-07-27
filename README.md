@@ -12,8 +12,10 @@ Apollo for Reddit with in-app configurable API keys and several fixes and improv
 - Suppress unwanted messages on app startup (wallpaper popup, in-app announcements, etc)
 - Support new share link format (reddit.com/r/subreddit/s/xxxxxx) so they open like any other post and not in a browser
 - Support media share links (reddit.com/media?url=)
-- Partially working "New Comments Highlightifier" Ultra feature (new comment count only)
+- **Fully working** "New Comments Highlightifier" Ultra feature
 - Randomize "trending subreddits list" so it doesn't show **iOS**, **Clock**, **Time**, **IfYouDontMind** all the time
+- Use generic user agent for requests to Reddit
+- Support FLEX debugging
 
 ## Known issues
 - Apollo Ultra features may cause app to crash 
@@ -37,9 +39,11 @@ Recommended configuration:
 - [Theos](https://github.com/theos/theos)
 
 1. `git clone`
+2. `git submodule update --init --recursive`
 2. `make package`
 
 ## Credits
 - [Apollo-CustomApiCredentials](https://github.com/EthanArbuckle/Apollo-CustomApiCredentials) by [@EthanArbuckle](https://github.com/EthanArbuckle)
 - [ApolloAPI](https://github.com/ryannair05/ApolloAPI) by [@ryannair05](https://github.com/ryannair05)
 - [ApolloPatcher](https://github.com/ichitaso/ApolloPatcher) by [@ichitaso](https://github.com/ichitaso)
+- [GitHub Copilot](https://github.com/features/copilot)
