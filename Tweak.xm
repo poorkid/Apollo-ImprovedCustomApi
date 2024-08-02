@@ -43,7 +43,7 @@ static NSArray *const blockedUrls = @[
     @"https://apollogur.download/api/goodbye_wallpaper"
 ];
 
-static NSString *const defaultUserAgent = @"Mozilla/5.0 (iPhone; CPU iPhone OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
+static NSString *const defaultUserAgent = @"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36";
 
 // Highlight color for new unread comments
 static UIColor *const NewPostCommentsColor = [UIColorFromRGB(0xFFD16E) colorWithAlphaComponent: 0.15];
