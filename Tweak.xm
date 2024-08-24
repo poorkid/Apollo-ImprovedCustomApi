@@ -469,7 +469,7 @@ static NSString *imageID;
 - (NSURLSessionDataTask *)dataTaskWithURL:(NSURL *)url completionHandler:(void (^)(NSData *, NSURLResponse *, NSError *))completionHandler {
     imageID = [url.lastPathComponent stringByDeletingPathExtension];
     if ([url.absoluteString containsString:@"https://apollogur.download/api/image/"]) {
-        NSString *modifiedURLString = [NSString stringWithFormat:@"https://api.imgur.com/3/image/%@.json", imageID];
+        NSString *modifiedURLString = [NSString stringWithFormat:@"https://api.imgur.com/3/image/%@", imageID];
         NSURL *modifiedURL = [NSURL URLWithString:modifiedURLString];
         // Access the modified URL to get the actual data
         NSURLSessionDataTask *dataTask = [self dataTaskWithURL:modifiedURL completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
@@ -485,7 +485,12 @@ static NSString *imageID;
         [dataTask resume];
         return dataTask;
     } else if ([url.absoluteString containsString:@"https://apollogur.download/api/album/"]) {
-        NSString *modifiedURLString = [NSString stringWithFormat:@"https://api.imgur.com/3/album/%@.json", imageID];
+        // Parse new URL format with title (/album/some-album-title-<albumid>)
+        NSRange range = [imageID rangeOfString:@"-" options:NSBackwardsSearch];
+        if (range.location != NSNotFound) {
+            imageID = [imageID substringFromIndex:range.location + 1];
+        }
+        NSString *modifiedURLString = [NSString stringWithFormat:@"https://api.imgur.com/3/album/%@", imageID];
         NSURL *modifiedURL = [NSURL URLWithString:modifiedURLString];
         return %orig(modifiedURL, completionHandler);
     }
