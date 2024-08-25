@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.1.3] - 2024-08-23
+
+Fix issue with newer Imgur images and albums not loading properly
+
 ## [v1.1.2] - 2024-08-01
 
 Update user agent to fix multireddit search
@@ -67,6 +71,7 @@ There are currently a few limitations:
 ## [v1.0.0] - 2023-10-13
 - Initial release
 
+[v1.1.3]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.1.2...v1.1.3
 [v1.1.2]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.1.1...v1.1.2
 [v1.1.1]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.12...v1.1.1
 [v1.0.12]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.0.11...v1.0.12
