@@ -56,6 +56,10 @@ static NSRegularExpression *ShareLinkRegex;
 static NSString *const MediaShareLinkPattern = @"^(?:https?:)?//(?:www\\.)?reddit\\.com/media\\?url=(.*?)$";
 static NSRegularExpression *MediaShareLinkRegex;
 
+// Regex for Imgur image links with title + ID
+static NSString *const ImgurTitleIdImageLinkPattern = @"^(?:https?:)?//(?:www\\.)?imgur\\.com/(\\w+(?:-\\w+)+)$";
+static NSRegularExpression *ImgurTitleIdImageLinkRegex;
+
 // Cache storing resolved share URLs - this is an optimization so that we don't need to resolve the share URL every time
 static NSCache <NSString *, ShareUrlTask *> *cache;
 
@@ -170,7 +174,10 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
 // Asynchronously resolve share URLs in background
 // This is an optimization to "pre-resolve" share URLs so that by the time one taps a share URL it should already be resolved
 // On slower network connections, there may still be a loading alert
-- (id)initWithString:(id)string {
++ (instancetype)URLWithString:(NSString *)string {
+    if (!string) {
+        return %orig;
+    }
     NSTextCheckingResult *match = [ShareLinkRegex firstMatchInString:string options:0 range:NSMakeRange(0, [string length])];
     if (match) {
         // This exits early if already in cache
@@ -185,13 +192,52 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
         NSURL *decodedURL = [NSURL URLWithString:decodedURLString];
         return decodedURL;
     }
+
+    NSTextCheckingResult *imgurWithTitleIdMatch = [ImgurTitleIdImageLinkRegex firstMatchInString:string options:0 range:NSMakeRange(0, [string length])];
+    if (imgurWithTitleIdMatch) {
+        NSRange imageIDRange = [imgurWithTitleIdMatch rangeAtIndex:1];
+        NSString *imageID = [string substringWithRange:imageIDRange];
+        imageID = [[imageID componentsSeparatedByString:@"-"] lastObject];
+        NSString *modifiedURLString = [NSString stringWithFormat:@"https://imgur.com/%@", imageID];
+        return [NSURL URLWithString:modifiedURLString];
+    }
+    return %orig;
+}
+
+// Duplicate of above as NSURL has 2 main init methods
+- (id)initWithString:(id)string {
+    if (!string) {
+        return %orig;
+    }
+    NSTextCheckingResult *match = [ShareLinkRegex firstMatchInString:string options:0 range:NSMakeRange(0, [string length])];
+    if (match) {
+        StartShareURLResolveTask(string);
+    }
+
+    NSTextCheckingResult *mediaMatch = [MediaShareLinkRegex firstMatchInString:string options:0 range:NSMakeRange(0, [string length])];
+    if (mediaMatch) {
+        NSRange media = [mediaMatch rangeAtIndex:1];
+        NSString *encodedURLString = [string substringWithRange:media];
+        NSString *decodedURLString = [encodedURLString stringByRemovingPercentEncoding];
+        NSURL *decodedURL = [NSURL URLWithString:decodedURLString];
+        return decodedURL;
+    }
+
+    NSTextCheckingResult *imgurWithTitleIdMatch = [ImgurTitleIdImageLinkRegex firstMatchInString:string options:0 range:NSMakeRange(0, [string length])];
+    if (imgurWithTitleIdMatch) {
+        NSRange imageIDRange = [imgurWithTitleIdMatch rangeAtIndex:1];
+        NSString *imageID = [string substringWithRange:imageIDRange];
+        imageID = [[imageID componentsSeparatedByString:@"-"] lastObject];
+        NSString *modifiedURLString = [NSString stringWithFormat:@"https://imgur.com/%@", imageID];
+        return [NSURL URLWithString:modifiedURLString];
+    }
     return %orig;
 }
 
 // Rewrite x.com links as twitter.com
 - (NSString *)host {
     NSString *originalHost = %orig;
-    if ([originalHost isEqualToString:@"x.com"]) {
+    if (originalHost && [originalHost isEqualToString:@"x.com"]) {
         return @"twitter.com";
     }
     return originalHost;
@@ -481,7 +527,6 @@ static NSString *imageID;
                 completionHandler(data, response, error);
             }
         }];
-
         [dataTask resume];
         return dataTask;
     } else if ([url.absoluteString containsString:@"https://apollogur.download/api/album/"]) {
@@ -680,6 +725,7 @@ static void initializePostSnapshots(NSData *data) {
     NSError *error = NULL;
     ShareLinkRegex = [NSRegularExpression regularExpressionWithPattern:ShareLinkRegexPattern options:NSRegularExpressionCaseInsensitive error:&error];
     MediaShareLinkRegex = [NSRegularExpression regularExpressionWithPattern:MediaShareLinkPattern options:NSRegularExpressionCaseInsensitive error:&error];
+    ImgurTitleIdImageLinkRegex = [NSRegularExpression regularExpressionWithPattern:ImgurTitleIdImageLinkPattern options:NSRegularExpressionCaseInsensitive error:&error];
 
     NSDictionary *defaultValues = @{UDKeyBlockAnnouncements: @YES, UDKeyEnableFLEX: @NO, UDKeyApolloShowUnreadComments: @NO};
     [[NSUserDefaults standardUserDefaults] registerDefaults:defaultValues];
