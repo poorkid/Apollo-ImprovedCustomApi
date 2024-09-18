@@ -110,17 +110,15 @@ static NSURL *RemoveShareTrackingParams(NSURL *url) {
 // Start async task to resolve share URL
 static void StartShareURLResolveTask(NSString *urlString) {
     __block ShareUrlTask *task;
-    @synchronized(cache) { // needed?
-        task = [cache objectForKey:urlString];
-        if (task) {
-            return;
-        }
-
-        dispatch_group_t dispatch_group = dispatch_group_create();
-        task = [[ShareUrlTask alloc] init];
-        task.dispatchGroup = dispatch_group;
-        [cache setObject:task forKey:urlString];
+    task = [cache objectForKey:urlString];
+    if (task) {
+        return;
     }
+
+    dispatch_group_t dispatch_group = dispatch_group_create();
+    task = [[ShareUrlTask alloc] init];
+    task.dispatchGroup = dispatch_group;
+    [cache setObject:task forKey:urlString];
 
     NSURL *url = [NSURL URLWithString:urlString];
     dispatch_group_enter(task.dispatchGroup);
@@ -180,8 +178,10 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
     }
     NSTextCheckingResult *match = [ShareLinkRegex firstMatchInString:string options:0 range:NSMakeRange(0, [string length])];
     if (match) {
-        // This exits early if already in cache
-        StartShareURLResolveTask(string);
+        if (![cache objectForKey:string]) {
+            StartShareURLResolveTask(string);
+        }
+        return %orig;
     }
     // Fix Reddit Media URL redirects, for example this comment: https://reddit.com/r/TikTokCringe/comments/18cyek4/_/kce86er/?context=1 has an image link in this format: https://www.reddit.com/media?url=https%3A%2F%2Fi.redd.it%2Fpdnxq8dj0w881.jpg
     NSTextCheckingResult *mediaMatch = [MediaShareLinkRegex firstMatchInString:string options:0 range:NSMakeRange(0, [string length])];
@@ -211,7 +211,10 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
     }
     NSTextCheckingResult *match = [ShareLinkRegex firstMatchInString:string options:0 range:NSMakeRange(0, [string length])];
     if (match) {
-        StartShareURLResolveTask(string);
+        if (![cache objectForKey:string]) {
+            StartShareURLResolveTask(string);
+        }
+        return %orig;
     }
 
     NSTextCheckingResult *mediaMatch = [MediaShareLinkRegex firstMatchInString:string options:0 range:NSMakeRange(0, [string length])];
@@ -219,7 +222,7 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
         NSRange media = [mediaMatch rangeAtIndex:1];
         NSString *encodedURLString = [string substringWithRange:media];
         NSString *decodedURLString = [encodedURLString stringByRemovingPercentEncoding];
-        NSURL *decodedURL = [NSURL URLWithString:decodedURLString];
+        NSURL *decodedURL = [[NSURL alloc] initWithString:decodedURLString];
         return decodedURL;
     }
 
@@ -229,7 +232,7 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
         NSString *imageID = [string substringWithRange:imageIDRange];
         imageID = [[imageID componentsSeparatedByString:@"-"] lastObject];
         NSString *modifiedURLString = [NSString stringWithFormat:@"https://imgur.com/%@", imageID];
-        return [NSURL URLWithString:modifiedURLString];
+        return [[NSURL alloc] initWithString:modifiedURLString];
     }
     return %orig;
 }
