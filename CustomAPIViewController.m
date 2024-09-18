@@ -1,6 +1,7 @@
 #import "CustomAPIViewController.h"
 #import "UserDefaultConstants.h"
 #import "B64ImageEncodings.h"
+#import "Version.h"
 
 // Implementation derived from https://github.com/ryannair05/ApolloAPI/blob/master/CustomAPIViewController.m
 // Credits to Ryan Nair (@ryannair05) for the original implementation
@@ -198,6 +199,12 @@
     NSURL *apolloPatcherLinkURL = [NSURL URLWithString:@"https://github.com/ichitaso/ApolloPatcher"];
     UIButton *apolloPatcherButton = [self creditsButton:@"ApolloPatcher" subtitle:@"@ichitaso" linkURL:apolloPatcherLinkURL b64Image:B64Ichitaso];
     [stackView addArrangedSubview:apolloPatcherButton];
+
+    UILabel *versionLabel = [[UILabel alloc] init];
+    versionLabel.text = @TWEAK_VERSION;
+    versionLabel.font = [UIFont systemFontOfSize:14];
+    versionLabel.textAlignment = NSTextAlignmentCenter;
+    [stackView addArrangedSubview:versionLabel];
 }
 
 - (void)textFieldDidEndEditing:(UITextField *)textField {
