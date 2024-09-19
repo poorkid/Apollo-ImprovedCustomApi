@@ -108,7 +108,8 @@ static NSURL *RemoveShareTrackingParams(NSURL *url) {
 }
 
 // Start async task to resolve share URL
-static void StartShareURLResolveTask(NSString *urlString) {
+static void StartShareURLResolveTask(NSURL *url) {
+    NSString *urlString = [url absoluteString];
     __block ShareUrlTask *task;
     task = [cache objectForKey:urlString];
     if (task) {
@@ -120,7 +121,6 @@ static void StartShareURLResolveTask(NSString *urlString) {
     task.dispatchGroup = dispatch_group;
     [cache setObject:task forKey:urlString];
 
-    NSURL *url = [NSURL URLWithString:urlString];
     dispatch_group_enter(task.dispatchGroup);
     NSURLSessionTask *getTask = [[NSURLSession sharedSession] dataTaskWithURL:url completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         if (!error) {
@@ -141,17 +141,9 @@ static void StartShareURLResolveTask(NSString *urlString) {
 static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSString *), void (^ignoreHandler)(void)){
     ShareUrlTask *task = [cache objectForKey:urlString];
     if (!task) {
-        // The NSURL initWithString hook might not catch every share URL, so check one more time and enqueue a task if needed
-        NSTextCheckingResult *match = [ShareLinkRegex firstMatchInString:urlString options:0 range:NSMakeRange(0, [urlString length])];
-        if (!match) {
-            ignoreHandler();
-            return;
-        }
-        StartShareURLResolveTask(urlString);
-        task = [cache objectForKey:urlString];
-    }
-
-    if (task.resolvedURL) {
+        ignoreHandler();
+        return;
+    } else if (task.resolvedURL) {
         successHandler(task.resolvedURL);
         return;
     } else {
@@ -178,10 +170,9 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
     }
     NSTextCheckingResult *match = [ShareLinkRegex firstMatchInString:string options:0 range:NSMakeRange(0, [string length])];
     if (match) {
-        if (![cache objectForKey:string]) {
-            StartShareURLResolveTask(string);
-        }
-        return %orig;
+        NSURL *url = %orig;
+        StartShareURLResolveTask(url);
+        return url;
     }
     // Fix Reddit Media URL redirects, for example this comment: https://reddit.com/r/TikTokCringe/comments/18cyek4/_/kce86er/?context=1 has an image link in this format: https://www.reddit.com/media?url=https%3A%2F%2Fi.redd.it%2Fpdnxq8dj0w881.jpg
     NSTextCheckingResult *mediaMatch = [MediaShareLinkRegex firstMatchInString:string options:0 range:NSMakeRange(0, [string length])];
@@ -211,10 +202,9 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
     }
     NSTextCheckingResult *match = [ShareLinkRegex firstMatchInString:string options:0 range:NSMakeRange(0, [string length])];
     if (match) {
-        if (![cache objectForKey:string]) {
-            StartShareURLResolveTask(string);
-        }
-        return %orig;
+        NSURL *url = %orig;
+        StartShareURLResolveTask(url);
+        return url;
     }
 
     NSTextCheckingResult *mediaMatch = [MediaShareLinkRegex firstMatchInString:string options:0 range:NSMakeRange(0, [string length])];
