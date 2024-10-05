@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.1.6] - 2024-10-05
+
+- Fix issue with share URLs not working after device locks
+- Remove unused code for handling Imgur links
+
 ## [v1.1.5b] - 2024-09-18
 
 - Fix rare crashing issue
