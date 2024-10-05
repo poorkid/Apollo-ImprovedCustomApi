@@ -86,6 +86,7 @@ There are currently a few limitations:
 ## [v1.0.0] - 2023-10-13
 - Initial release
 
+[v1.1.6]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.1.5b...v1.1.6
 [v1.1.5b]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.1.4...v1.1.5b
 [v1.1.4]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.1.3...v1.1.4
 [v1.1.3]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.1.2...v1.1.3
