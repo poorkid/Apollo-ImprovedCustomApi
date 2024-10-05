@@ -4,9 +4,8 @@
 
 @interface ShareUrlTask : NSObject
 
-@property (nonatomic) dispatch_group_t dispatchGroup;
-@property (nonatomic, strong) NSString *resolvedURL;
-
+@property (atomic, strong) dispatch_group_t dispatchGroup;
+@property (atomic, strong) NSString *resolvedURL;
 @end
 
 @interface RDKLink

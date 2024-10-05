@@ -141,15 +141,31 @@ static void StartShareURLResolveTask(NSURL *url) {
 static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSString *), void (^ignoreHandler)(void)){
     ShareUrlTask *task = [cache objectForKey:urlString];
     if (!task) {
-        ignoreHandler();
-        return;
-    } else if (task.resolvedURL) {
+        // The NSURL initWithString hook might not catch every share URL, so check one more time and enqueue a task if needed
+        NSTextCheckingResult *match = [ShareLinkRegex firstMatchInString:urlString options:0 range:NSMakeRange(0, [urlString length])];
+        if (!match) {
+            ignoreHandler();
+            return;
+        }
+        [NSURL URLWithString:urlString];
+        task = [cache objectForKey:urlString];
+    }
+
+    if (task.resolvedURL) {
         successHandler(task.resolvedURL);
         return;
     } else {
         // Wait for task to finish and show loading alert to not block main thread
         UIViewController *shareAlertController = PresentResolvingShareLinkAlert();
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            if (!task.dispatchGroup) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [shareAlertController dismissViewControllerAnimated:YES completion:^{
+                        ignoreHandler();
+                    }];
+                });
+                return;
+            }
             dispatch_group_wait(task.dispatchGroup, DISPATCH_TIME_FOREVER);
             dispatch_async(dispatch_get_main_queue(), ^{
                 [shareAlertController dismissViewControllerAnimated:YES completion:^{
@@ -511,17 +527,7 @@ static NSString *imageID;
         NSString *modifiedURLString = [NSString stringWithFormat:@"https://api.imgur.com/3/image/%@", imageID];
         NSURL *modifiedURL = [NSURL URLWithString:modifiedURLString];
         // Access the modified URL to get the actual data
-        NSURLSessionDataTask *dataTask = [self dataTaskWithURL:modifiedURL completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-            if (error || ![self isJSONResponse:response]) {
-                // If an error occurs or the response is not a JSON response, dummy data is used
-                [self useDummyDataWithCompletionHandler:completionHandler];
-            } else {
-                // If normal data is returned, the callback is executed
-                completionHandler(data, response, error);
-            }
-        }];
-        [dataTask resume];
-        return dataTask;
+        return %orig(modifiedURL, completionHandler);
     } else if ([url.absoluteString containsString:@"https://apollogur.download/api/album/"]) {
         // Parse new URL format with title (/album/some-album-title-<albumid>)
         NSRange range = [imageID rangeOfString:@"-" options:NSBackwardsSearch];
