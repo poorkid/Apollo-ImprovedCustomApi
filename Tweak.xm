@@ -108,21 +108,19 @@ static NSURL *RemoveShareTrackingParams(NSURL *url) {
 }
 
 // Start async task to resolve share URL
-static void StartShareURLResolveTask(NSString *urlString) {
+static void StartShareURLResolveTask(NSURL *url) {
+    NSString *urlString = [url absoluteString];
     __block ShareUrlTask *task;
-    @synchronized(cache) { // needed?
-        task = [cache objectForKey:urlString];
-        if (task) {
-            return;
-        }
-
-        dispatch_group_t dispatch_group = dispatch_group_create();
-        task = [[ShareUrlTask alloc] init];
-        task.dispatchGroup = dispatch_group;
-        [cache setObject:task forKey:urlString];
+    task = [cache objectForKey:urlString];
+    if (task) {
+        return;
     }
 
-    NSURL *url = [NSURL URLWithString:urlString];
+    dispatch_group_t dispatch_group = dispatch_group_create();
+    task = [[ShareUrlTask alloc] init];
+    task.dispatchGroup = dispatch_group;
+    [cache setObject:task forKey:urlString];
+
     dispatch_group_enter(task.dispatchGroup);
     NSURLSessionTask *getTask = [[NSURLSession sharedSession] dataTaskWithURL:url completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         if (!error) {
@@ -149,7 +147,7 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
             ignoreHandler();
             return;
         }
-        StartShareURLResolveTask(urlString);
+        [NSURL URLWithString:urlString];
         task = [cache objectForKey:urlString];
     }
 
@@ -160,6 +158,14 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
         // Wait for task to finish and show loading alert to not block main thread
         UIViewController *shareAlertController = PresentResolvingShareLinkAlert();
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            if (!task.dispatchGroup) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [shareAlertController dismissViewControllerAnimated:YES completion:^{
+                        ignoreHandler();
+                    }];
+                });
+                return;
+            }
             dispatch_group_wait(task.dispatchGroup, DISPATCH_TIME_FOREVER);
             dispatch_async(dispatch_get_main_queue(), ^{
                 [shareAlertController dismissViewControllerAnimated:YES completion:^{
@@ -180,8 +186,9 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
     }
     NSTextCheckingResult *match = [ShareLinkRegex firstMatchInString:string options:0 range:NSMakeRange(0, [string length])];
     if (match) {
-        // This exits early if already in cache
-        StartShareURLResolveTask(string);
+        NSURL *url = %orig;
+        StartShareURLResolveTask(url);
+        return url;
     }
     // Fix Reddit Media URL redirects, for example this comment: https://reddit.com/r/TikTokCringe/comments/18cyek4/_/kce86er/?context=1 has an image link in this format: https://www.reddit.com/media?url=https%3A%2F%2Fi.redd.it%2Fpdnxq8dj0w881.jpg
     NSTextCheckingResult *mediaMatch = [MediaShareLinkRegex firstMatchInString:string options:0 range:NSMakeRange(0, [string length])];
@@ -211,7 +218,9 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
     }
     NSTextCheckingResult *match = [ShareLinkRegex firstMatchInString:string options:0 range:NSMakeRange(0, [string length])];
     if (match) {
-        StartShareURLResolveTask(string);
+        NSURL *url = %orig;
+        StartShareURLResolveTask(url);
+        return url;
     }
 
     NSTextCheckingResult *mediaMatch = [MediaShareLinkRegex firstMatchInString:string options:0 range:NSMakeRange(0, [string length])];
@@ -219,7 +228,7 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
         NSRange media = [mediaMatch rangeAtIndex:1];
         NSString *encodedURLString = [string substringWithRange:media];
         NSString *decodedURLString = [encodedURLString stringByRemovingPercentEncoding];
-        NSURL *decodedURL = [NSURL URLWithString:decodedURLString];
+        NSURL *decodedURL = [[NSURL alloc] initWithString:decodedURLString];
         return decodedURL;
     }
 
@@ -229,7 +238,7 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
         NSString *imageID = [string substringWithRange:imageIDRange];
         imageID = [[imageID componentsSeparatedByString:@"-"] lastObject];
         NSString *modifiedURLString = [NSString stringWithFormat:@"https://imgur.com/%@", imageID];
-        return [NSURL URLWithString:modifiedURLString];
+        return [[NSURL alloc] initWithString:modifiedURLString];
     }
     return %orig;
 }
@@ -518,17 +527,7 @@ static NSString *imageID;
         NSString *modifiedURLString = [NSString stringWithFormat:@"https://api.imgur.com/3/image/%@", imageID];
         NSURL *modifiedURL = [NSURL URLWithString:modifiedURLString];
         // Access the modified URL to get the actual data
-        NSURLSessionDataTask *dataTask = [self dataTaskWithURL:modifiedURL completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-            if (error || ![self isJSONResponse:response]) {
-                // If an error occurs or the response is not a JSON response, dummy data is used
-                [self useDummyDataWithCompletionHandler:completionHandler];
-            } else {
-                // If normal data is returned, the callback is executed
-                completionHandler(data, response, error);
-            }
-        }];
-        [dataTask resume];
-        return dataTask;
+        return %orig(modifiedURL, completionHandler);
     } else if ([url.absoluteString containsString:@"https://apollogur.download/api/album/"]) {
         // Parse new URL format with title (/album/some-album-title-<albumid>)
         NSRange range = [imageID rangeOfString:@"-" options:NSBackwardsSearch];

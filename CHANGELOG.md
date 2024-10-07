@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.1.6] - 2024-10-05
+
+- Fix issue with share URLs not working after device locks
+- Remove unused code for handling Imgur links
+
+## [v1.1.5b] - 2024-09-18
+
+- Fix rare crashing issue
+- Include tweak version in Custom API settings view
+
 ## [v1.1.4] - 2024-08-28
 
 - Improve share URL and Imgur link parsing (specifically URLs formatted like: `https://imgur.com/some-title-<imageid>`)
@@ -76,6 +86,8 @@ There are currently a few limitations:
 ## [v1.0.0] - 2023-10-13
 - Initial release
 
+[v1.1.6]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.1.5b...v1.1.6
+[v1.1.5b]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.1.4...v1.1.5b
 [v1.1.4]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.1.3...v1.1.4
 [v1.1.3]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.1.2...v1.1.3
 [v1.1.2]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.1.1...v1.1.2
