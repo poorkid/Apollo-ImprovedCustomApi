@@ -1,1 +1,1 @@
-#define TWEAK_VERSION "v1.1.6"
+#define TWEAK_VERSION "v1.1.7"

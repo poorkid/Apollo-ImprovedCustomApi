@@ -49,11 +49,11 @@ static NSString *const defaultUserAgent = @"Mozilla/5.0 (Macintosh; Intel Mac OS
 static UIColor *const NewPostCommentsColor = [UIColorFromRGB(0xFFD16E) colorWithAlphaComponent: 0.15];
 
 // Regex for opaque share links
-static NSString *const ShareLinkRegexPattern = @"^(?:https?:)?//(?:www\\.)?reddit\\.com/(?:r|u)/(\\w+)/s/(\\w+)$";
+static NSString *const ShareLinkRegexPattern = @"^(?:https?:)?//(?:www\\.|new\\.|np\\.)?reddit\\.com/(?:r|u)/(\\w+)/s/(\\w+)$";
 static NSRegularExpression *ShareLinkRegex;
 
 // Regex for media share links
-static NSString *const MediaShareLinkPattern = @"^(?:https?:)?//(?:www\\.)?reddit\\.com/media\\?url=(.*?)$";
+static NSString *const MediaShareLinkPattern = @"^(?:https?:)?//(?:www\\.|np\\.)?reddit\\.com/media\\?url=(.*?)$";
 static NSRegularExpression *MediaShareLinkRegex;
 
 // Regex for Imgur image links with title + ID
@@ -469,7 +469,6 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
 
 @interface NSURLSession (Private)
 - (BOOL)isJSONResponse:(NSURLResponse *)response;
-- (void)useDummyDataWithCompletionHandler:(void (^)(NSData *, NSURLResponse *, NSError *))completionHandler;
 @end
 
 %hook NSURLSession
@@ -520,9 +519,8 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
 }
 
 // "Unproxy" Imgur requests
-static NSString *imageID;
 - (NSURLSessionDataTask *)dataTaskWithURL:(NSURL *)url completionHandler:(void (^)(NSData *, NSURLResponse *, NSError *))completionHandler {
-    imageID = [url.lastPathComponent stringByDeletingPathExtension];
+    NSString *imageID = [url.lastPathComponent stringByDeletingPathExtension];
     if ([url.absoluteString containsString:@"https://apollogur.download/api/image/"]) {
         NSString *modifiedURLString = [NSString stringWithFormat:@"https://api.imgur.com/3/image/%@", imageID];
         NSURL *modifiedURL = [NSURL URLWithString:modifiedURLString];
@@ -553,54 +551,6 @@ static NSString *imageID;
     return NO;
 }
 
-%new
-- (void)useDummyDataWithCompletionHandler:(void (^)(NSData *, NSURLResponse *, NSError *))completionHandler {
-    // Create dummy data
-    NSDictionary *dummyData = @{
-        @"data": @{
-            @"id": @"example_id",
-            @"title": @"Example Image",
-            @"description": @"This is an example image",
-            @"datetime": @(1234567890),
-            @"type": @"image/gif",
-            @"animated": @(YES),
-            @"width": @(640),
-            @"height": @(480),
-            @"size": @(1024),
-            @"views": @(100),
-            @"bandwidth": @(512),
-            @"vote": @(0),
-            @"favorite": @(NO),
-            @"nsfw": @(NO),
-            @"section": @"example",
-            @"account_url": @"example_user",
-            @"account_id": @"example_account_id",
-            @"is_ad": @(NO),
-            @"in_most_viral": @(NO),
-            @"has_sound": @(NO),
-            @"tags": @[@"example", @"image"],
-            @"ad_type": @"image",
-            @"ad_url": @"https://example.com",
-            @"edited": @(0),
-            @"in_gallery": @(NO),
-            @"deletehash": @"abc123deletehash",
-            @"name": @"example_image",
-            @"link": [NSString stringWithFormat:@"https://i.imgur.com/%@.gif", imageID],
-            @"success": @(YES)
-        }
-    };
-
-    NSError *error;
-    NSData *dummyDataJSON = [NSJSONSerialization dataWithJSONObject:dummyData options:0 error:&error];
-
-    if (error) {
-        NSLog(@"JSON conversion error for dummy data: %@", error);
-        return;
-    }
-
-    NSHTTPURLResponse *response = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://apollogur.download/api/image/"] statusCode:200 HTTPVersion:@"HTTP/1.1" headerFields:@{@"Content-Type": @"application/json"}];
-    completionHandler(dummyDataJSON, response, nil);
-}
 %end
 
 // Implementation derived from https://github.com/EthanArbuckle/Apollo-CustomApiCredentials/blob/main/Tweak.m
