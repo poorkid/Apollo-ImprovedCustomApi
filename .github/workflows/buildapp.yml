@@ -57,6 +57,9 @@ jobs:
         env:
           THEOS: ${{ github.workspace }}/theos
 
+      - name: Add 'rootless' suffix to package name
+        run: mv packages/*-arm64.deb packages/$(ls packages | grep '\-arm64\.deb$' | sed 's/-arm64\.deb$/-arm64_rootless.deb/')
+
       - name: Create release
         id: create_release
         uses: softprops/action-gh-release@v0.1.15
