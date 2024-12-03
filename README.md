@@ -40,7 +40,7 @@ Recommended configuration:
 
 1. `git clone`
 2. `git submodule update --init --recursive`
-2. `make package`
+2. `make package` or `make package THEOS_PACKAGE_SCHEME=rootless` for rootless variant
 
 ## Credits
 - [Apollo-CustomApiCredentials](https://github.com/EthanArbuckle/Apollo-CustomApiCredentials) by [@EthanArbuckle](https://github.com/EthanArbuckle)
