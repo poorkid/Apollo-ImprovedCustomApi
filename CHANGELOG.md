@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.1.8] - 2024-12-07
+
+- Fix RedGIFs links loading without sound (thanks [@iCrazeiOS](https://github.com/iCrazeiOS)!)
+
 ## [v1.1.7b] - 2024-10-25
 
 - Add rootless package (thanks [@darkxdd](https://github.com/darkxdd)!)
@@ -94,6 +98,7 @@ There are currently a few limitations:
 ## [v1.0.0] - 2023-10-13
 - Initial release
 
+[v1.1.8]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.1.7b...v1.1.8
 [v1.1.7b]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.1.7...v1.1.7b
 [v1.1.7]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.1.6...v1.1.7
 [v1.1.6]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.1.5b...v1.1.6
