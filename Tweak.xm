@@ -498,9 +498,10 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
         }
 
         NSMutableDictionary *dict = [NSMutableDictionary dictionary];
-        // Limit to 5 subreddits, chosen randomly
-        if (subreddits.count > 5 && [[NSUserDefaults standardUserDefaults] boolForKey:UDKeyLimitTrending]) {
-            NSUInteger count = MIN(5, subreddits.count);
+        // Randomize and limit subreddits
+        bool limitSubreddits = [sTrendingSubredditsLimit length] > 0;
+        if (limitSubreddits && [sTrendingSubredditsLimit integerValue] < subreddits.count) {
+            NSUInteger count = [sTrendingSubredditsLimit integerValue];
             NSMutableArray<NSString *> *randomSubreddits = [NSMutableArray arrayWithCapacity:count];
             for (NSUInteger i = 0; i < count; i++) {
                 NSUInteger randomIndex = arc4random_uniform((uint32_t)subreddits.count);
@@ -823,7 +824,7 @@ static void initializeRandomSources() {
     MediaShareLinkRegex = [NSRegularExpression regularExpressionWithPattern:MediaShareLinkPattern options:NSRegularExpressionCaseInsensitive error:&error];
     ImgurTitleIdImageLinkRegex = [NSRegularExpression regularExpressionWithPattern:ImgurTitleIdImageLinkPattern options:NSRegularExpressionCaseInsensitive error:&error];
 
-    NSDictionary *defaultValues = @{UDKeyBlockAnnouncements: @YES, UDKeyEnableFLEX: @NO, UDKeyApolloShowUnreadComments: @NO, UDKeyLimitTrending: @YES, UDKeyShowRandNsfw: @NO, UDKeyRandomSubredditsSource:defaultRandomSubredditsSource, UDKeyRandNsfwSubredditsSource: @"", UDKeyTrendingSubredditsSource: defaultTrendingSubredditsSource };
+    NSDictionary *defaultValues = @{UDKeyBlockAnnouncements: @YES, UDKeyEnableFLEX: @NO, UDKeyApolloShowUnreadComments: @NO, UDKeyTrendingSubredditsLimit: @"5", UDKeyShowRandNsfw: @NO, UDKeyRandomSubredditsSource:defaultRandomSubredditsSource, UDKeyRandNsfwSubredditsSource: @"", UDKeyTrendingSubredditsSource: defaultTrendingSubredditsSource };
     [[NSUserDefaults standardUserDefaults] registerDefaults:defaultValues];
 
     sRedditClientId = (NSString *)[[[NSUserDefaults standardUserDefaults] objectForKey:UDKeyRedditClientId] ?: @"" copy];
@@ -833,6 +834,7 @@ static void initializeRandomSources() {
     sRandomSubredditsSource = (NSString *)[[NSUserDefaults standardUserDefaults] objectForKey:UDKeyRandomSubredditsSource];
     sRandNsfwSubredditsSource = (NSString *)[[NSUserDefaults standardUserDefaults] objectForKey:UDKeyRandNsfwSubredditsSource];
     sTrendingSubredditsSource = (NSString *)[[NSUserDefaults standardUserDefaults] objectForKey:UDKeyTrendingSubredditsSource];
+    sTrendingSubredditsLimit = (NSString *)[[NSUserDefaults standardUserDefaults] objectForKey:UDKeyTrendingSubredditsLimit];
 
     %init(SettingsGeneralViewController=objc_getClass("Apollo.SettingsGeneralViewController"), ApolloTabBarController=objc_getClass("Apollo.ApolloTabBarController"));
 

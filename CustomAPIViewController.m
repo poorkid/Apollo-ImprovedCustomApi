@@ -14,7 +14,8 @@ typedef NS_ENUM(NSInteger, Tag) {
     TagImgurClientId,
     TagTrendingSubredditsSource,
     TagRandomSubredditsSource,
-    TagRandNsfwSubredditsSource
+    TagRandNsfwSubredditsSource,
+    TagTrendingLimit,
 };
 
 - (UIImage *)decodeBase64ToImage:(NSString *)strEncodeData {
@@ -65,7 +66,7 @@ typedef NS_ENUM(NSInteger, Tag) {
     return button;
 }
 
-- (UIStackView *)createLabeledStackViewWithLabelText:(NSString *)labelText placeholder:(NSString *)placeholder text:(NSString *)text tag:(NSInteger)tag {
+- (UIStackView *)createLabeledStackViewWithLabelText:(NSString *)labelText placeholder:(NSString *)placeholder text:(NSString *)text tag:(NSInteger)tag isNumerical:(BOOL)isNumerical {
     UIStackView *stackView = [[UIStackView alloc] init];
     stackView.axis = UILayoutConstraintAxisVertical;
     stackView.distribution = UIStackViewDistributionFillProportionally;
@@ -83,11 +84,18 @@ typedef NS_ENUM(NSInteger, Tag) {
     textField.delegate = self;
     textField.clearButtonMode = UITextFieldViewModeWhileEditing;
     textField.font = [UIFont systemFontOfSize:14];
+    if (isNumerical) {
+        textField.keyboardType = UIKeyboardTypeNumberPad;
+    }
 
     [stackView addArrangedSubview:label];
     [stackView addArrangedSubview:textField];
 
     return stackView;
+}
+
+- (UIStackView *)createLabeledStackViewWithLabelText:(NSString *)labelText placeholder:(NSString *)placeholder text:(NSString *)text tag:(NSInteger)tag {
+    return [self createLabeledStackViewWithLabelText:labelText placeholder:placeholder text:text tag:tag isNumerical:NO];
 }
 
 - (void)viewDidLoad {
@@ -152,11 +160,11 @@ typedef NS_ENUM(NSInteger, Tag) {
     UIStackView *flexStackView = [self createToggleSwitchWithKey:UDKeyEnableFLEX labelText:@"FLEX Debugging (Needs restart)" action:@selector(flexSwitchToggled:)];
     [stackView addArrangedSubview:flexStackView];
 
-    UIStackView *limitTrendingStackView = [self createToggleSwitchWithKey:UDKeyLimitTrending labelText:@"Limit trending subreddits to 5" action:@selector(limitTrendingSwitchToggled:)];
-    [stackView addArrangedSubview:limitTrendingStackView];
-
     UIStackView *randNsfwStackView = [self createToggleSwitchWithKey:UDKeyShowRandNsfw labelText:@"RandNSFW button" action:@selector(randNsfwSwitchToggled:)];
     [stackView addArrangedSubview:randNsfwStackView];
+
+    UIStackView *trendingSubredditsLimitStackView = [self createLabeledStackViewWithLabelText:@"Limit trending subreddits to:" placeholder:@"(unlimited)" text:sTrendingSubredditsLimit tag:TagTrendingLimit isNumerical:YES];
+    [stackView addArrangedSubview:trendingSubredditsLimitStackView];
 
     UIStackView *trendingSourceStackView = [self createLabeledStackViewWithLabelText:@"Trending subreddits source:" placeholder:defaultTrendingSubredditsSource text:sTrendingSubredditsSource tag:TagTrendingSubredditsSource];
     [stackView addArrangedSubview:trendingSourceStackView];
@@ -278,6 +286,10 @@ typedef NS_ENUM(NSInteger, Tag) {
         textField.text = [textField.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
         sRandNsfwSubredditsSource = textField.text;
         [[NSUserDefaults standardUserDefaults] setValue:sRandNsfwSubredditsSource forKey:UDKeyRandNsfwSubredditsSource];
+    } else if (textField.tag == TagTrendingLimit) {
+        textField.text = [textField.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+        sTrendingSubredditsLimit = textField.text;
+        [[NSUserDefaults standardUserDefaults] setValue:sTrendingSubredditsLimit forKey:UDKeyTrendingSubredditsLimit];
     }
 }
 
@@ -292,10 +304,6 @@ typedef NS_ENUM(NSInteger, Tag) {
 
 - (void)flexSwitchToggled:(UISwitch *)sender {
     [[NSUserDefaults standardUserDefaults] setBool:sender.isOn forKey:UDKeyEnableFLEX];
-}
-
-- (void)limitTrendingSwitchToggled:(UISwitch *)sender {
-    [[NSUserDefaults standardUserDefaults] setBool:sender.isOn forKey:UDKeyLimitTrending];
 }
 
 - (void)randNsfwSwitchToggled:(UISwitch *)sender {

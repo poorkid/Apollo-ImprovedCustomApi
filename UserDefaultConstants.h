@@ -3,11 +3,11 @@ static NSString *const UDKeyRedditClientId = @"RedditApiClientId";
 static NSString *const UDKeyImgurClientId = @"ImgurApiClientId";
 static NSString *const UDKeyBlockAnnouncements = @"DisableApollonouncements";
 static NSString *const UDKeyEnableFLEX = @"EnableFlexDebugging";
-static NSString *const UDKeyLimitTrending = @"LimitCustomTrending";
 static NSString *const UDKeyShowRandNsfw = @"ShowRandNsfwButton";
 static NSString *const UDKeyRandomSubredditsSource = @"RandomSubredditsSource";
 static NSString *const UDKeyRandNsfwSubredditsSource = @"RandNsfwSubredditsSource";
 static NSString *const UDKeyTrendingSubredditsSource = @"TrendingSubredditsSource";
+static NSString *const UDKeyTrendingSubredditsLimit = @"TrendingSubredditsLimit";
 
 static NSString *const UDKeyApolloShowUnreadComments = @"ShowUnreadComments";
 
