@@ -10,12 +10,13 @@ Apollo for Reddit with in-app configurable API keys and several fixes and improv
 - Working Imgur integration (view, delete, and upload single images and multi-image albums) 
 - Handle x.com links as Twitter links so that they can be opened in the Twitter app
 - Suppress unwanted messages on app startup (wallpaper popup, in-app announcements, etc)
-- Support new share link format (reddit.com/r/subreddit/s/xxxxxx) so they open like any other post and not in a browser
-- Support media share links (reddit.com/media?url=)
+- Support /s/ share links (reddit.com/r/subreddit/s/xxxxxx) natively
+- Support media share links (reddit.com/media?url=) natively
 - **Fully working** "New Comments Highlightifier" Ultra feature
 - Use generic user agent for requests to Reddit
-- Support FLEX debugging
-- Use custom external sources for random and trending subreddits
+- FLEX debugging
+- Support custom external sources for random and trending subreddits
+- Working v.redd.it video downloads
 
 ## Known issues
 - Apollo Ultra features may cause app to crash 
@@ -38,9 +39,10 @@ Recommended configuration:
 ### Requirements
 - [Theos](https://github.com/theos/theos)
 
-1. `git clone`
-2. `git submodule update --init --recursive`
-2. `make package` or `make package THEOS_PACKAGE_SCHEME=rootless` for rootless variant
+1. `git clone https://github.com/JeffreyCA/Apollo-ImprovedCustomApi`
+2. `cd Apollo-ImprovedCustomApi`
+3. `git submodule update --init --recursive`
+4. `make package` or `make package THEOS_PACKAGE_SCHEME=rootless` for rootless variant
 
 ## Credits
 - [Apollo-CustomApiCredentials](https://github.com/EthanArbuckle/Apollo-CustomApiCredentials) by [@EthanArbuckle](https://github.com/EthanArbuckle)
