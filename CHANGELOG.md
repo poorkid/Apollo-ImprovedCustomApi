@@ -4,8 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [v1.2.3] - 2025-04-07
 
-- Fix issue with Imgur multi-image uploads failing. Note that multi-image uploads still fail on the first attempt but should succeed on the next attempt.
-- Update Custom API settings with link to [GitHub discussion](https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/discussions/60) where you can share your own subreddit sources.
+- Fix issue with Imgur multi-image uploads consistently failing. Note that multi-image uploads still fail on the first attempt but should succeed on the next attempt.
+- Update Custom API settings with link to [new GitHub discussion](https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/discussions/60) where you can share your own subreddit sources with others.
 
 ## [v1.2.2] - 2025-01-16
 
@@ -119,6 +119,7 @@ There are currently a few limitations:
 ## [v1.0.0] - 2023-10-13
 - Initial release
 
+[v1.2.3]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.2.2...v1.2.3
 [v1.2.2]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.2.1...v1.2.2
 [v1.2.1]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.1.8...v1.2.1
 [v1.1.8]: https://github.com/JeffreyCA/Apollo-ImprovedCustomApi/compare/v1.1.7b...v1.1.8
